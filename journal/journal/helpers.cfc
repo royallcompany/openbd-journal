@@ -16,14 +16,6 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --->
 <cfcomponent output="false"><cfscript>
-
-	/**
-		* @version $Id: helpers.cfc 2522 2015-02-19 23:14:55Z wpultz $
-		*
-		* @Class journaling.journal.helpers
-		*/
-
-
 	/**
 		* Returns an array of colors
 		*

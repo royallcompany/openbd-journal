@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @version $Id: tree-map.js 2522 2015-02-19 23:14:55Z wpultz $
  * @class journal.tree-map
  */
 
@@ -59,8 +58,28 @@ function TreeMap( _journalFileName, _contSelector ) {
 
 	var vis = d3.select( contSelector );
 
+	$.extend( {
+		getUrlVars: function() {
+			var vars = [],
+				hash;
+			var hashes = window.location.href.slice( window.location.href.indexOf( '?' ) + 1 ).split( '&' );
+			for ( var i = 0; i < hashes.length; i++ ) {
+				hash = hashes[ i ].split( '=' );
+				vars.push( hash[ 0 ] );
+				vars[ hash[ 0 ] ] = hash[ 1 ];
+			}
+			return vars;
+		},
+		getUrlVar: function( name ) {
+			return $.getUrlVars()[ name ];
+		}
+	} );
+
+	var theIncludes = undefined == $.getUrlVar( 'includes' ) ? '' : $.getUrlVar( 'includes' );
+	var theExcludes = undefined == $.getUrlVar( 'excludes' ) ? '' : $.getUrlVar( 'excludes' );
+
 	// TODO - fix magic numbers
-	d3.json( 'journal/site.cfc?METHOD=getHeatTree&journal=' + encodeURI( jrnlFile ), function( _json ) {
+	d3.json( 'journal/site.cfc?METHOD=getHeatTree&journal=' + encodeURI( jrnlFile ) + '&includes=' + theIncludes + '&excludes=' + theExcludes, function( _json ) {
 		root = _json;
 		root.fixed = true;
 		root.x = treeWidth / 2;

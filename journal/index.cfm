@@ -14,14 +14,13 @@
 
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-	/**
-		* @class journaling.index
-		*/
-	--->
-<cfset title = 'Journal Files'>
-<cfset brw = new journal.browser()>
+--->
+<cfset title 	= 'Journal Files'>
+<cfset brw 		= new journal.browser()>
 <cfset helper = new journal.helpers()>
+
+<cfparam name="URL.includes" default="">
+<cfparam name="URL.excludes" default="">
 
 <!--- File option, deleting and compounding files --->
 <cfif structKeyExists(form, "fileOption") AND structKeyExists(form, "fl")>
@@ -39,8 +38,8 @@
 	<cfelseif form.fileOption == "compound">
 		<!--- Make sure the list contains at least two files --->
 		<cfif listLen(form.fl) GT 1>
-			<cfset cmp = CreateObject("component", "journal.compound")>
-			<cfset list = listToArray( listSort(form.fl, "text") )>
+			<cfset cmp 				= CreateObject("component", "journal.compound")>
+			<cfset list 			= listToArray( listSort(form.fl, "text") )>
 			<cfset compStatus = cmp.compoundJournals( _files = form.fl )>
 			<cfif compStatus._success>
 				<cfsavecontent variable="message"><span style="color:green;">Files compounded!</span></cfsavecontent>
@@ -101,8 +100,8 @@
 						<td>#journal.info._timems# ms</td>
 						<td>
 							<ul class="coverage_list">
-							<cfloop from="1" to="#arrayLen(journal.getFiles())#" index="f">
-								<li><a href="fileCoverage.cfm?journal=#journal.relativeToJournal#&file=#f#">#journal.getPrettyFile(f)#</a></li>
+							<cfloop array="#journal.getFiles()#" index="f">
+								<li><a href="fileCoverage.cfm?journal=#journal.relativeToJournal#&file=#f.id#">#journal.getPrettyFile(f.id)#</a></li>
 							</cfloop>
 							</ul>
 						</td>
@@ -114,6 +113,7 @@
 							An error occurred while reading this journal file.
 						</td>
 					</tr>
+					<cfset console( cfcatch )>
 				</cfcatch>
 				</cftry>
 			</cfoutput></cfloop>

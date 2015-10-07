@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @version $Id: bar-graph.js 2522 2015-02-19 23:14:55Z wpultz $
  * @author wpultz
  * @class journal.bar-graph
  *

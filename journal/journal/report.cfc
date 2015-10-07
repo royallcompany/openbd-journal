@@ -18,11 +18,6 @@
 <cfcomponent output="false">
 <!---	
 /**
-	* @Class journaling.journal.report
-	* @version $Id: report.cfc 2522 2015-02-19 23:14:55Z wpultz $
-	*/
-
-/**
 	* Creates a heatmap markup
 	*
   * @public

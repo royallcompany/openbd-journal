@@ -14,8 +14,6 @@
 
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-	$Id: settings.cfm 2522 2015-02-19 23:14:55Z wpultz $
 --->
 <script type="text/javascript">
 	$( document ).ready( function() {
@@ -50,7 +48,8 @@
 					break;
 			}
 
-			window.location.replace( uri );
+			window.open( uri, '_blank' );
+			// window.location.replace( uri );
 			return false;
 		} );
 

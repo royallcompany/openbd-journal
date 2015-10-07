@@ -15,19 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @version $Id: tree-heat-map.js 2522 2015-02-19 23:14:55Z wpultz $
  * @class journal.tree-heat-map
  */
 
 function TreeHeatMap( _journalFileName, _contSelector, _uState ) {
 	var uState = _uState;
-
 	var jrnlFile = _journalFileName,
 		contSelector = _contSelector,
 		$cont = $( _contSelector ),
 		width = $cont.attr( 'width' ),
 		height = $cont.attr( 'height' );
-
 
 	//get a color range of 20 to represent the top level directory
 	var colorBorder = d3.scale.category20c();
@@ -79,8 +76,28 @@ function TreeHeatMap( _journalFileName, _contSelector, _uState ) {
 	//get the treemap container in a D3 object
 	var div = d3.select( contSelector );
 
+	$.extend( {
+		getUrlVars: function() {
+			var vars = [],
+				hash;
+			var hashes = window.location.href.slice( window.location.href.indexOf( '?' ) + 1 ).split( '&' );
+			for ( var i = 0; i < hashes.length; i++ ) {
+				hash = hashes[ i ].split( '=' );
+				vars.push( hash[ 0 ] );
+				vars[ hash[ 0 ] ] = hash[ 1 ];
+			}
+			return vars;
+		},
+		getUrlVar: function( name ) {
+			return $.getUrlVars()[ name ];
+		}
+	} );
+
+	var theIncludes = undefined == $.getUrlVar( 'includes' ) ? '' : $.getUrlVar( 'includes' );
+	var theExcludes = undefined == $.getUrlVar( 'excludes' ) ? '' : $.getUrlVar( 'excludes' );
+
 	//tell D3 the AJAX data source to use, and how to render the graph
-	d3.json( 'journal/site.cfc?METHOD=getHeatTree&journal=' + encodeURI( jrnlFile ), function( _error, _root ) {
+	d3.json( 'journal/site.cfc?METHOD=getHeatTree&journal=' + encodeURI( jrnlFile ) + '&includes=' + theIncludes + '&excludes=' + theExcludes, function( _error, _root ) {
 		var node = div.call( tip )
 			.datum( _root )
 			.selectAll( '.node' )

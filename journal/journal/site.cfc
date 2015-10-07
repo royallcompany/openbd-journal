@@ -14,26 +14,28 @@
   *
   * You should have received a copy of the GNU General Public License
   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  *
-	* @version $Id: site.cfc 2522 2015-02-19 23:14:55Z wpultz $
-	* @Class journaling.journal.site
 	*/
 <cfcomponent output="false">
 	<cfscript>
-	
+	param name="URL.includes" default="";
+	param name="URL.excludes" default="";
+
 	// Set up some defaults
-	this.root = expandPath("/").replace("\","/");
-	this.fs = "/";
-	this.cfExt = ["*.cfc",
-								"*.cfm",
-								"*.inc"];
+	this.root 	= expandPath("/").replace("\","/");
+	this.fs 		= "/";
+	this.cfExt 	= [	"*.cfc",
+									"*.cfm",
+									"*.inc"];
+
 	this.blacklist = ["journaling#fileSeparator()#",
 										"mxunit#fileSeparator()#",
 										"CodeChecker#fileSeparator()#",
 										"WEB-INF#fileSeparator()#customtags#fileSeparator()#common"];
+
 	this.qFiles = queryNew("name,attributes,datelastmodified,directory,mode,size,type");
 	this.nFiles = 0;
-	this.info = {name:"SITE",children:[]};
+	this.info 	= { name:"SITE", children:[] };
+
 
 
 	/**
@@ -43,24 +45,47 @@
 		* @return {component}
 		*/
 	public component function init(string _rootPath="/"){
-		var where = "";
-
-		this.root = expandPath(arguments._rootPath).replace("\","/");
-
+		var where 	= "";
+		this.root 	= expandPath(arguments._rootPath).replace("\","/");
 		this.qFiles = directoryList(this.root, true, "query", arrayToList(this.cfExt,"|"));
 
-		for (var i=1; i<=arrayLen(this.blackList); i++){
+		for( var i=1; i<=arrayLen(this.blackList); i++ ){
 			where &= "name NOT LIKE '#this.blackList[i]#%' ";
 			if (i<arrayLen(this.blackList)){
 				where &= "AND ";
 			}
 		}
 
-		this.qFiles = queryOfQueryRun("SELECT * FROM this.qFiles WHERE #where# ORDER BY datelastmodified");
-		this.nFiles = this.qFiles.recordCount;
-		this.spiderHash = this.getSpiderHash();
+		if( len(url.includes) > 0 && len(url.excludes) == 0 ) {
+			for( item in listToArray(url.includes) ) {
+				if( right(item, 1) == "\" || right(item, 1) == "/" ) {
+					item = left( item, len(item) -1 );
+				}
 
-		infoPath = "/var/tmp/24hr/" & this.spiderHash & ".json";
+				item = replace(item, this.root, "");
+				item = replace(item, "/","\");
+				if( !listContains(url.excludes, item) ) {
+					where &= " AND name LIKE '#item#%'";
+				}
+			}
+		}
+
+		if( len(url.excludes) > 0 ) {
+			for( item in listToArray(url.excludes) ) {
+				if( right(item, 1) == "\" || right(item, 1) == "/" ) {
+					item = left( item, len(item) -1 );
+				}
+
+				item = replace(item, this.root, "");
+				item = replace(item, "/","\");
+				where &= " AND name NOT LIKE '#item#%'";
+			}
+		}
+
+		this.qFiles 		= queryOfQueryRun("SELECT * FROM this.qFiles WHERE #where# ORDER BY datelastmodified");
+		this.nFiles 		= this.qFiles.recordCount;
+		this.spiderHash = this.getSpiderHash();
+		infoPath 				= "/var/tmp/24hr/" & this.spiderHash & ".json";
 
 		if (fileExists(infoPath)){
 			this.info = deserializeJSON(fileRead(infoPath));
@@ -80,8 +105,8 @@
 		* @return {string}
 		*/
 	private string function getSpiderHash(){
-		var latest = queryOfQueryRun("SELECT max(datelastmodified) as datelastmodified FROM this.qFiles");
-		var spiderString = "#this.nFiles# #latest.datelastmodified[1]#";
+		var latest 				= queryOfQueryRun("SELECT max(datelastmodified) as datelastmodified FROM this.qFiles");
+		var spiderString 	= "#this.nFiles# #latest.datelastmodified[1]#";
 		return hash(spiderString);
 	}
 
@@ -93,11 +118,11 @@
 	private void function spiderFiles(){
 
 		for (row in this.qFiles){
-			row.name = row.name.replace("\","/");
-			var tName = row.name;
-			var fName = listLast(tName,this.fs);
-			tName = replace(tName,fName,"");
-			var insPoint = this.getChild(this.info, listFirst(tName,this.fs), listRest(tName,this.fs), true);
+			row.name 			= row.name.replace("\","/");
+			var tName 		= row.name;
+			var fName 		= listLast(tName,this.fs);
+			tName 				= replace(tName,fName,"");
+			var insPoint 	= this.getChild(this.info, listFirst(tName,this.fs), listRest(tName,this.fs), true);
 			arrayAppend(insPoint.children,{	root:listFirst(tName,this.fs),
 																			fullPath: row.name,
 																			name:fName,
@@ -129,7 +154,7 @@
 			}
 		}
 
-		if (arguments.bCreate){
+		if (arguments.bCreate) {
 			var tmp = {name:arguments.first,children:[]};
 			arrayAppend(ins.children,tmp);
 			return this.getChild(arguments.ins.children[i], listFirst(rest,this.fs), listRest(rest,this.fs), arguments.bCreate);
@@ -159,32 +184,39 @@
 		* @param {string} _sJournal (required)   
 		*/
 	private void function augmentCoverage(required string _sJournal){
-		var journal = new parser(GetJournaldirectory() & this.fs & _sJournal);
-		var files = journal.getFiles();
-		for (var i=1; i<=arrayLen(files);i++){
-			var reject = false;
-			var fPath = journal.getPrettyFile(i);
-			fPath = replace(fPath,this.fs,"","ONE");
+		try {
+			var journal = new parser(GetJournaldirectory() & this.fs & _sJournal);
+			var files 	= journal.getFiles();
 
-			for (var j=1; j<= arrayLen(this.blackList); j++){
-				if (left(fPath,len(this.blackList[j])) == this.blackList[j].replace("\","/")){
-					reject = true;
+			for( i in files ) {
+				var reject 	= false;
+				var fPath 	= journal.getPrettyFile(i.id);
+				fPath 			= replace(fPath,this.fs,"","ONE");
+
+				for (var j=1; j<= arrayLen(this.blackList); j++){
+					if (left(fPath,len(this.blackList[j])) == this.blackList[j].replace("\","/")){
+						reject = true;
+					}
+				}
+
+				if (!reject){
+					var fName 						= listLast(fPath,this.fs);
+					var path 							= replace(fPath,fName,"");
+					node 									= this.getChild(this.info, listFirst(fPath,this.fs),listRest(fPath,this.fs), true);
+					node.stats.nCoverage 	= journal.getCoverage(i.id);
+					node.file_id 					= i.id;
 				}
 			}
-
-			if (!reject){
-				var fName = listLast(fPath,this.fs);
-				var path = replace(fPath,fName,"");
-				node = this.getChild(this.info, listFirst(fPath,this.fs),listRest(fPath,this.fs));
-				node.stats.nCoverage = journal.getCoverage(i);
-				node.file_id = i;
-			}
+		} catch( any err ){
+			console( err );
 		}
 	}
 
 	</cfscript>
 
 
+
+<!--- 
 	/**
 		* @remote
 		* @method getHeatTree
@@ -193,9 +225,10 @@
 		* @returnformat {JSON}
 		* @return {struct}
 		*/
+		 --->
 	<cffunction name="getHeatTree" access="remote" returntype="struct" returnformat="JSON">
 		<cfargument name="rootPath" required="false" default="/" />
-		<cfargument name="journal" required="false" default="" />
+		<cfargument name="journal"  required="false" default="" />
 
 		<cfset this.init( arguments.rootPath ) />
 		<cfset arguments.journal = Trim( arguments.journal ) />

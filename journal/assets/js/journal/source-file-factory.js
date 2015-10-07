@@ -17,7 +17,6 @@
  *
  * returns a source file object for the given file id, including the content for from that file
  *
- * @version $Id: source-file-factory.js 2522 2015-02-19 23:14:55Z wpultz $
  * @author wpultz
  * @class journal.source-file-factory
  * param {Object} _contentCache

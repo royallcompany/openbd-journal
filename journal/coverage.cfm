@@ -17,24 +17,29 @@
 --->
 
 <cfsilent><cfscript>
-	/**
-		* @Class journaling.coverage
-		*/
 	title = 'Journal Coverage';
 
-	param name="URL.mode" default="nSource";
+	param name = "URL.mode" 		default="nSource";
+	param name = "URL.excludes" default="";
+	param name = "URL.includes" default="";
+	
 	if ( !structKeyExists( url, "journal" ) ) {
 		location( "index.cfm" );
 	}
-	journalPath = GetJournalDirectory() & url.journal;
 
+	journalPath = GetJournalDirectory() & url.journal;
+	journal 		= new journal.parser( journalPath );
+	journal.loadAll();
+		
 	try {
-		journal = new journal.parser( journalPath );
-		journal.loadAll();
 		totalCoverage = int( journal.getTotalCoverage() * 1000 ) / 10;
-		coverageDonut = {	"Coverage":	{ "value":totalCoverage,			color:"##219CD0" },
-											"Gap":			{ "value":100-totalCoverage,	color:"##0B3A4C" } };
-		totalStats = journal.getTotalStats();
+
+		coverageDonut = {	"Coverage":	{ "value": totalCoverage,			color: "##219CD0" },
+											"Gap":			{ "value": 100-totalCoverage,	color: "##0B3A4C" } };
+
+		totalStats 		= journal.getTotalStats();
+		statDonut 		= {};
+
 		stateFriendly = {
 			nBlank 		: "Blank Lines",
 			nComments : "Comment Lines",
@@ -43,24 +48,28 @@
 			nScript 	: "CFScript",
 			nOther 		: "Other"
 		};
-		statDonut = {};
+
+		
 		for ( stat in totalStats ) {
 			if ( listFind( "nSource,nCoverage", stat ) < 1 ) {
 				statDonut[ stateFriendly[ stat ] ] = { value : totalStats[ stat ] };
 			}
 		}
+		
+	} catch( any err ) {
+		// console( "error encountered in coverage.cfm" );
+		// console( err );
+	}
 		tagStats = journal.getTagUsage();
 		tagDonut = {};
+		
 		for ( tag in tagStats ) {
 			tagDonut[ tag.tag ] = { value : tag.cnt };
 		}
+		
 		rpt = new journal.report();
 
 		donutFactory = new journal.donut();
-	} catch( any err ) {
-		console( "error encountered in coverage.cfm" );
-		console( err );
-	}
 </cfscript></cfsilent>
 
 <cfinclude template="header.cfm">
@@ -92,15 +101,15 @@
 			<div id="files-list" class="pure-u-1-3 pure-u-lg-9-24">
 				<h3>Files touched in this Journal</h3>
 				<ul class="coverage_list">
-				<cfloop from="1" to="#arrayLen( journal.getFiles() )#" index="f">
-					<li><a id="file_#f#" href="fileCoverage.cfm?journal=#journal.relativeToJournal#&file=#f#">#journal.getPrettyFile( f )#</a> <span style="white-space: nowrap">( #int( journal.getCoverage( f ) * 1000 ) / 10#% )</span></li>
+				<cfloop array="#journal.getFiles()#" index="f">
+					<li><a id="file_#f.id#" href="fileCoverage.cfm?journal=#journal.relativeToJournal#&file=#f.id#">#journal.getPrettyFile( f.id )#</a> <span style="white-space: nowrap">( #int( journal.getCoverage( f.id ) * 1000 ) / 10#% )</span></li>
 				</cfloop>
 				</ul>
 			</div>
 
 			<div id="donuts" class="pure-u-1 pure-u-lg-4-24">
-				#donutFactory.donut( _data = coverageDonut, _settings = { "display" : "value", "showKeys" : false , header: "Code Coverage"} )#
-				#donutFactory.donut( _data = statDonut, _settings = { "display" : "value", "showKeys" : false, header: "Line Breakdown" } )#
+				#donutFactory.donut( _data = coverageDonut, _settings = { "display" : "value", "showKeys" : false, header: "Code Coverage"} )#
+				#donutFactory.donut( _data = statDonut, 		_settings = { "display" : "value", "showKeys" : false, header: "Line Breakdown" } )#
 			</div>
 
 		</div>
@@ -114,12 +123,11 @@
 
 		<script>
 		$( function() {
-		  var uState = <cfoutput>#serializeJSON( object = URL, conv = "upper" )#</cfoutput>;
-
+		  var uState 	= <cfoutput>#serializeJSON( object = URL, conv = "upper" )#</cfoutput>;
 		  treeHeatMap = new TreeHeatMap( '<cfoutput>#url.journal#</cfoutput>', '#treeHeat', uState );
-		  treeMap = new TreeMap( '<cfoutput>#url.journal#</cfoutput>', '#treeMap' );
+		  treeMap 		= new TreeMap( '<cfoutput>#url.journal#</cfoutput>', '#treeMap' );
 
-		  var color = '';
+		  var color 	= '';
 
 		  $( '#mode' ).val( uState.MODE ).trigger( 'change' );
 
@@ -141,7 +149,6 @@
 		  function heatClick( _d ) {
 		    if ( _d.file_id != -1 ) {
 		      uState.FILE = _d.file_id;
-
 		      window.open( 'fileCoverage.cfm?JOURNAL=' + uState.JOURNAL + '&FILE=' + uState.FILE );
 		    }
 		  }
@@ -198,7 +205,6 @@
 			  $( this ).addClass( 'pure-button-primary' );
 			  switchTabs();
 			} );
-
 		} );
 		</script>
 

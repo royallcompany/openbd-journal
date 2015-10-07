@@ -15,7 +15,7 @@
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-  $Id: compound.cfc 2522 2015-02-19 23:14:55Z wpultz $
+  @author Marcus Fernstrom
 --->
 
 <cfcomponent output="false" hint="Single purpose component, takes a number of journal files and writes a compound journal file to disk">
@@ -23,9 +23,6 @@
 	/**
 		* Entry point for the compound component
 		* 
-		* @Class journaling.journal.compound
-		* @author mfernstrom
-	  *
 	  * @public
 	  * @method compoundJournals
 	  * @param {string} _files (required)  Takes a list of names, relative to the journal log root

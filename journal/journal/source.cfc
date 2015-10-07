@@ -16,22 +16,16 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --->
 <cfcomponent output="false"><cfscript>
-	/**
-	  * $Id: source.cfc 2522 2015-02-19 23:14:55Z wpultz $
-	  *
-	  * @class journal.source
-	  */
-
-	this.fHash = "";
-	this.bHashSync = true;
-	this.aSource = [];
-	this.uStats = {	nBlank:0,
-									nComments:0,
-									nSource:0,
-									nTag:0,
-									nScript:0,
-									nOther:0,
-									nCoverage:0};
+	this.fHash 			= "";
+	this.bHashSync 	= true;
+	this.aSource 		= [];
+	this.uStats 		= {	nBlank:0,
+											nComments:0,
+											nSource:0,
+											nTag:0,
+											nScript:0,
+											nOther:0,
+											nCoverage:0 };
 
 
 	/**

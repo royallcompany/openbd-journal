@@ -15,7 +15,7 @@
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-  $Id: donut.cfc 2522 2015-02-19 23:14:55Z wpultz $
+  @author Marcus Fernstrom
 --->
 
 <cfcomponent output="false" hint="I'm the donut factory. Toss me data and I'll throw back donuts.">
@@ -36,11 +36,6 @@
 			the absolute value or a relative percentage in the legend
 
 			The only required library is D3.
-		
-	/**
-		* @Class journaling.journal.donut
-		* @author mfernstrom
-		*/
 
 	/**
 	  * Main entry point for the donut factory

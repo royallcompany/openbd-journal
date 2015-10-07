@@ -17,21 +17,17 @@
 --->
 <cfcomponent output="false"><cfscript>
 	/**
-		* $Id: parser.cfc 2522 2015-02-19 23:14:55Z wpultz $
-	  *
-	  * @Class journaling.journal.parser  <-- Needs to go before releasing to public, hardcoded to our path
-	  *
 		* Journal information can be found at http://openbd.org/manual/?/journal
 		*/
 
 
-	this.files = [];
-	this.sPath = "";
-	this.info = {};
-	this.aSource = [];
-	this.aCoverage = [];
-	this.timestamp = '';
-	this.filename = '';
+	this.info 			= {};
+	this.files 			= [];
+	this.aSource 		= [];
+	this.aCoverage 	= [];
+	this.sPath 			= '';
+	this.timestamp 	= '';
+	this.filename 	= '';
 
 	//Use aliases to lowercase column names
 	this.dbColumnAliases = "t_offset as t_offset, code as code, file_id as file_id, session as session, file_depth as file_depth, tag_depth as tag_depth, tag as tag, line as line, col as col, fn as fn, scriptline as scriptline, journalid as journalid, id as id, filesbetween as filesbetween";
@@ -51,10 +47,10 @@
 		this.sPath = Trim(arguments._sPath);
 
 		// Get basic file information
-		this.fileInfo = getFileInfo( this.sPath );
+		this.fileInfo 			= getFileInfo( this.sPath );
 		this.info._fileSize = this.fileInfo.size;
-		this.timestamp = this.fileInfo.lastmodified;
-		this.filename = this.fileInfo.name;
+		this.timestamp 			= this.fileInfo.lastmodified;
+		this.filename 			= this.fileInfo.name;
 		
 		// Calculate the relative file path to the journal directory
 		this.relativeToJournal = Replace( this.sPath, GetJournalDirectory(), '' ).replace("\","/");
@@ -67,6 +63,7 @@
 			if ( queryRun("journaling", "SELECT distinct(id) FROM journal WHERE id=#this.journalShort#").recordCount == 0 ) {
 				JournalReadToDataSource( datasource="journaling", file=this.sPath, id=this.journalShort );
 			}
+		
 		} catch( any e ) {
 			if ( e.detail contains 'Table "JOURNAL" not found' ) {
 				JournalReadToDataSource( datasource="journaling", file=this.sPath, id=this.journalShort );
@@ -93,23 +90,30 @@
 			*	This includes all CFC's, include's, template's etc.
 			*	The key is pointed to a unique number that is referenced in the remaining lines.
 			*/
+		var counter = 1;
 		for (fld in uDetails){
-
 			if (left(fld,1)!="_" && isStruct(uDetails[fld]) && uDetails[fld].id > 0){
 				//we have no guarantee the files are coming in order, always have to make sure the array is sized properly
 				if (!arrayIndexExists(this.files,uDetails[fld].id)){
 					arrayResize(this.files, uDetails[fld].id); //creates an array with new indexes set to NULL
 				}
+
 				//convert {FILENAME:{id:ID, hash:HASH}} to [{name:FILENAME, hash:HASH}] where the array index=ID
-				this.files[uDetails[fld].id] = {	name:fld, hash:uDetails[fld].hash};
+				this.files[uDetails[fld].id] = { name:fld, hash:uDetails[fld].hash, id: uDetails[fld].id };
+			
 			} else if (left(fld,1) == "_") {//store non-file information seperately
 				this.info[fld] = uDetails[fld];
 			}
+			
+			counter++;
 		}
 
-		// Size other array related the source files, so they all mathc
-		arrayResize(this.aSource,arrayLen(this.files));		//creates an array with all NULL values
-		arrayResize(this.aCoverage,arrayLen(this.files));	//creates an array with all NULL values
+		// Size other array related the source files, so they all match
+		arrayResize( this.aSource, arrayLen(this.files) );		//creates an array with all NULL values
+		arrayResize( this.aCoverage, arrayLen(this.files) );	//creates an array with all NULL values
+		for( i=1; i<= arrayLen(this.aCoverage); i++ ){
+			this.aCoverage[i] = 0;
+		}
 
 		return this;
 	}
@@ -128,13 +132,16 @@
 		if( _begin != -1 ) {
 			qry &= " AND journalid >= " & _begin;
 		}
+
 		if( _end != -1 && _end > _begin ) {
 			qry &= " AND journalid <= " & _end;
 		}
+		
 		var entries = QueryRun( "journaling", qry );
 
 		return entries;
 	}
+
 
 
 	/**
@@ -145,27 +152,16 @@
 		*/
 	public query function getEntriesMS( required numeric _ms, required numeric _bufferSize ) {
 		var qry = QueryRun( "journaling", "SELECT * FROM journal WHERE id = " & this.journalShort & " AND t_offset >= " & _ms );
+		
 		if( qry.RecordCount > 0 ) {
 			var index = qry.journalid[1];
 			var qry = "SELECT * FROM journal WHERE id = " & this.journalShort & " AND journalid > " & index - _bufferSize & " AND journalid < " & index + _bufferSize & " ORDER BY journalid ASC";
 			return QueryRun( "journaling", qry );
+		
 		} else {
 			var qry = "SELECT * FROM journal WHERE id = " & this.journalShort & " AND journalid > 0 AND journalid < " & _bufferSize & "ORDER BY journalid ASC";
 			return QueryRun( "journaling", qry );
 		}
-	}
-
-
-
-	/**
-		* Returns all the full paths to source files
-		*
-	  * @method getFiles
-	  * @public
-	  * @return {array}
-	  */
-	public array function getFiles(){
-		return this.files;
 	}
 
 
@@ -183,6 +179,7 @@
 		if (arrayIndexExists(this.files,arguments._idx)){
 			return this.files[arguments._idx].name;
 		}
+
 		return "Index #arguments._idx# does not exist";
 	}
 
@@ -200,6 +197,7 @@
 		if (arrayIndexExists(this.files,arguments._idx)){
 			return this.files[arguments._idx].hash;
 		}
+
 		return "Index #arguments._idx# does not exist";
 	}
 
@@ -218,7 +216,62 @@
 		if( len(arguments._journal) > 0 ) {
 			this.init( _sPath = getJournalDirectory() & arguments._journal );
 		}
+
 		return "/" & replace(this.getFile(arguments._idx), expandPath("/").replace("\","/"), "");
+	}
+
+
+
+	/**
+		* Returns all the full paths to source files
+		*
+	  * @method getFiles
+	  * @public
+	  * @return {array}
+	  */
+	public array function getFiles(){
+		var ret = [];
+		
+		if( len(url.includes) > 0 ) {
+			// Check if includes are set
+			if( len(url.includes) > 0 ) {
+				for( item in this.files ) {
+					for( chk in listToArray(url.includes) ) {
+						if( item.name contains chk ) {
+							if( !arrayContains(ret, item) ) {
+								arrayAppend(ret, item);
+							}
+						}
+					}
+				}
+			}
+		} else {
+			ret = this.files;
+		}
+
+
+		var toDelete = false;
+		// Handle excludes
+		if( len(url.excludes) > 0 ) {
+			for( i=1; i<=arrayLen(ret); i++ ) {
+				for( chk in listToArray(url.excludes) ) {
+					if( ret[i].name contains chk ) {
+						toDelete = true;
+					}
+				}
+				if(toDelete){
+					arrayDeleteAt(ret, i);
+					toDelete = false;
+					i--;
+				}
+			}
+		}
+
+		if( len(url.includes) == 0 && len(url.excludes) == 0 ) {
+			ret = this.files;
+		}
+
+		return ret;
 	}
 
 
@@ -230,8 +283,8 @@
 	  * @public
 	  */
 	public void function loadAll(){
-		for (var i=1; i<=arrayLen(this.getFiles()); i++){
-			this.getSource(i);
+		for( i in this.getFiles() ) {
+			this.getSource(i.id);
 		}
 	}
 
@@ -248,18 +301,33 @@
 		// If we already have the source loaded, return it, other wise, go get it
 		try {
 			return this.aSource[sfullPath];
+
 		} catch (any e){
+			var theIndex = 0;
+			
+			for( i=1; i<=arrayLen(this.files); i++ ) {
+				if( this.files[i].id == _idx ) {
+					theIndex = i;
+					break;
+				}
+			}
+			
 			// Get the number of lines related to this file for stat purpose
 			var lines = this.distinctLinesByFile(_idx);
+			
 			// Get the source
 			this.aSource[arguments._idx] = new source(this.getFile(arguments._idx), this.getFileHash(arguments._idx));
 
 			// Make sure we have lines that were covered, and that the source file has source code in it to calculate coverage with
 			if (lines.recordCount > 0 && this.aSource[arguments._idx].uStats.nSource > 0){
+				this.files[theIndex].coverage = lines.recordCount/this.aSource[arguments._idx].uStats.nSource;
 				this.aCoverage[arguments._idx] = lines.recordCount/this.aSource[arguments._idx].uStats.nSource;
+
 			} else {
+				this.files[theIndex].coverage = 0;
 				this.aCoverage[arguments._idx] = 0;
 			}
+
 			return this.aSource[arguments._idx];
 		}
 	}
@@ -277,7 +345,13 @@
 	public numeric function getCoverage(required numeric _idx){
 		// If we already have the coverage calculated, return it, otherwise, go get it
 		try {
-			return this.aCoverage[arguments._idx];
+			// return this.aCoverage[arguments._idx];
+			for( item in this.files ) {
+				if( item.id == _idx ){
+					return item.coverage;
+				}
+			}
+
 		} catch (any e){
 			this.getSource(arguments._idx);
 			return this.aCoverage[arguments._idx];
@@ -350,10 +424,11 @@
 	  * @return {numeric}
 	  */
 	public numeric function getTotalCoverage(){
-		//Load all the source
+		// Load all the source
 		this.loadAll();
-		//return an average of coverage for all files in this journal
-		return arrayAvg(this.aCoverage);
+
+		// Return an average of coverage for all files in this journal
+		return arrayAvg( this.aCoverage );
 	}
 
 
@@ -374,16 +449,18 @@
 									nScript:0,
 									nOther:0,
 									nCoverage:0};
+
 		//loop of all files
-		for (var i=1; i<=arrayLen(this.getFiles()); i++){
+		for ( i in this.getFiles() ) {
 			//get the source
-			var tmp = this.getSource(i);
+			var tmp = this.getSource(i.id);
 			//loop over all stats for the source
 			for (f in tmp.uStats){
 				//add the like stats together
 				total[f] += tmp.uStats[f];
 			}
 		}
+
 		return total;
 	}
 
@@ -401,19 +478,19 @@
 	  */
 	public query function linesByFile(required numeric _idx, numeric lineStart=0, numeric lineEnd=0){
 		//build the where clause for the QoQ
-		var where = "WHERE file_id=?";
-		var auParams = [{value:arguments._idx, cfSQLType:"CF_SQL_INTEGER"}];
+		var where 		= "WHERE file_id=?";
+		var auParams 	= [{value:arguments._idx, cfSQLType:"CF_SQL_INTEGER"}];
 
 		//check for optional line start
 		if (arguments.lineStart != 0){
 			where &= " AND journalid >= ?";
-			arrayAppend (auParams,{value:arguments.lineStart, cfSQLType:"CF_SQL_INTEGER"});
+			arrayAppend ( auParams,{value:arguments.lineStart, cfSQLType:"CF_SQL_INTEGER"} );
 		}
 
 		//check for optional line end
-		if (arguments.lineEnd != 0){
+		if ( arguments.lineEnd != 0 ){
 			where &= " AND journalid <= ?";
-			arrayAppend (auParams,{value:arguments.lineEnd, cfSQLType:"CF_SQL_INTEGER"});
+			arrayAppend ( auParams, {value:arguments.lineEnd, cfSQLType:"CF_SQL_INTEGER"} );
 		}
 
 		var lines = queryrun("journaling", 	"SELECT journalid as journalid, id as id, session as session, t_offset as t_offset, code as code ,file_id as file_id, file_depth as file_depth, tag_depth as tag_depth, tag as tag, line as line, col as col, fn as fn, scriptline as scriptline, '' as filesBetween "&
@@ -422,12 +499,12 @@
 
 		if (lines.recordCount >= 1){
 			//for every line that we return for this file, we need to see if there are other journal lines between this, and the next line
-			var prev=lines.journalid[1];
-			for (var i=1; i <= lines.recordCount; i++){
+			var prev = lines.journalid[1];
+			for ( var i=1; i <= lines.recordCount; i++ ){
 
-				if (lines.journalid[i]-1 > prev){
+				if ( lines.journalid[i]-1 > prev ){
 					//get the file ids for files that were touch between this line, and next
-					querySetCell(lines,"filesBetween",this.getFilesBetween(prev, lines.journalid[i]),i-1);
+					querySetCell( lines,"filesBetween",this.getFilesBetween(prev, lines.journalid[i]),i-1 );
 				}
 				prev = lines.journalid[i];
 
@@ -439,7 +516,7 @@
 
 
 	/**
-	  * Get a list of all files that were touched between a begina and end marker
+	  * Get a list of all files that were touched between a begin and end marker
 	  *
 	  * @method getFilesBetween
 	  * @private
@@ -447,18 +524,18 @@
 	  * @param {numeric} _nEnd (required)
 	  * @return {string}
 	  */
-	private string function getFilesBetween(required numeric _nBegin, required numeric _nEnd){
+	private string function getFilesBetween( required numeric _nBegin, required numeric _nEnd ){
 		//select all distinct file_id between the start and end boundry that are not FE: File End
-		var lines = queryrun("journaling", 	"SELECT distinct (file_id) as file_id "&
-																				"FROM journal "&
-																				"WHERE id=#this.journalShort# AND journalid>? AND journalid<? AND code NOT IN ('FE')",
-																				[{value:arguments._nBegin, cfSQLType:"CF_SQL_INTEGER"},
-																				 {value:arguments._nEnd, cfSQLType:"CF_SQL_INTEGER"}]);
+		var lines = queryrun( "journaling", 	"SELECT distinct (file_id) as file_id "&
+																					"FROM journal "&
+																					"WHERE id=#this.journalShort# AND journalid>? AND journalid<? AND code NOT IN ('FE')",
+																					[{value:arguments._nBegin, cfSQLType:"CF_SQL_INTEGER"},
+																					 {value:arguments._nEnd, cfSQLType:"CF_SQL_INTEGER"}] );
 
 		//conver the query to a list
 		var result = "";
-		for (var line in lines){
-			result = listAppend(result,line.file_id);
+		for ( var line in lines ){
+			result = listAppend( result,line.file_id );
 		}
 		return result;
 	}
@@ -640,9 +717,9 @@
 
 									//build a tag for custom click use
 									src[i].code = Replace(src[i].code, Trim(src[i].code), '<a href="##" data-journal="#arguments._journal#" '&
-																																											'data-file="#listFirst(filesBetween)#" '&
-																																											'data-lineStart="#journalLine.journalid[1]#" '&
-																																											'data-lineEnd="#journalLine2.journalid[1]#">#trim(src[i].code)#</a>', 'ALL');
+																																				'data-file="#listFirst(filesBetween)#" '&
+																																				'data-lineStart="#journalLine.journalid[1]#" '&
+																																				'data-lineEnd="#journalLine2.journalid[1]#">#trim(src[i].code)#</a>', 'ALL');
 								}
 								//add class to non-blank, and lines with content
 								if (!src[i].blank && src[i].content != ""){

@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @version $Id: source-file-content-cache.js 2522 2015-02-19 23:14:55Z wpultz $
  * @author wpultz
  * caches the content of the source files in use during the request being analyzed. we'll pull them out of the DOM once, and keep them here
  *

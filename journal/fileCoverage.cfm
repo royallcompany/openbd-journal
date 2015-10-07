@@ -17,11 +17,6 @@
 --->
 
 <cfsilent><cfscript>
-	/**
-		* $Id: fileCoverage.cfm 2522 2015-02-19 23:14:55Z wpultz $
-		* 
-		* @Class journaling.fileCoverage
-		*/
 	title = 'Journaling File Coverage';
 
 	param name="URL.mode" default="nSource";

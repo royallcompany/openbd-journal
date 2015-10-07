@@ -17,12 +17,6 @@
 --->
 
 <cfcomponent><cfscript>
-/** 
-	* @version $Id: browser.cfc 2522 2015-02-19 23:14:55Z wpultz $
-	*
-	* @class journal.browser
-	*/
-
 	this._sPath = GetJournaldirectory();
 
 	/**
