@@ -16,13 +16,11 @@
   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	*/
 component {
-
 	this.sPath 			= "";
 	this.journal 		= false;
 	this.tree 			= [];
 	this.treeDepth 	= 0;
 	this.fileCount 	= 0;
-
 
 	/**
 		* Initialize with path to a journal

@@ -19,8 +19,8 @@
 <cfset brw 		= new journal.browser()>
 <cfset helper = new journal.helpers()>
 
-<cfparam name="URL.includes" default="">
-<cfparam name="URL.excludes" default="">
+<cfparam name = "URL.includes" default="">
+<cfparam name = "URL.excludes" default="">
 
 <!--- File option, deleting and compounding files --->
 <cfif structKeyExists(form, "fileOption") AND structKeyExists(form, "fl")>
@@ -35,6 +35,7 @@
 				<span style="color:green;">#ListLen(form.fl)# file<cfif ListLen(form.fl) GT 1>s</cfif> deleted.</span><br>
 			</cfoutput></cfsavecontent>
 		</cfif>
+
 	<cfelseif form.fileOption == "compound">
 		<!--- Make sure the list contains at least two files --->
 		<cfif listLen(form.fl) GT 1>
@@ -50,6 +51,7 @@
 			<cfsavecontent variable="message"><span style="color:red;">To create a compound file, you need to select a start and end file.</span></cfsavecontent>
 		</cfif>
 	<cfelse>
+
 		<cfsavecontent variable="message">I've no idea how you managed to get to the else switch, go you!</cfsavecontent>
 	</cfif>
 </cfif>
@@ -173,7 +175,4 @@
 	  }, 4000 );
 	} );
 	</script>
-<!--- <cfdbinfo datasource="journaling" type="columns" table="journal" name="bla">
-<cfdump var="#bla#">
-<cfabort> --->
 <cfinclude template="footer.cfm">

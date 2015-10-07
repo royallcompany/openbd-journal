@@ -44,12 +44,14 @@
 	<cfif current == 'code-trace.cfm'>
 	<link rel="stylesheet" href="assets/css/code-trace.css" />
 	<script src="assets/js/vendor/jquery.scrollTo.min.js"></script>
+	
 	<!--- code tracer --->
 	<script src="assets/js/journal/source-file-content-cache.js"></script>
 	<script src="assets/js/journal/source-file-factory.js"></script>
 	<script src="assets/js/journal/source-file.js"></script>
 	<script src="assets/js/journal/source-file-tracer.js"></script>
 	<script src="assets/js/journal/request-context.js"></script>
+
 	<!--- gantt chart for timeline --->
 	<script src="assets/js/journal/d3.layout.gantt.js"></script>
 	</cfif>
@@ -60,7 +62,7 @@
 
 			<a href="/journal/" title="OpenBD Journal - Home"><img src="assets/img/openBD_57px.png"></a>
 
-			<h1><cfif isDefined('title') && title != ''><cfoutput>#title#</cfoutput><cfelse>Journal</cfif></h1>
+			<h1><cfif isDefined( 'title' ) && title != ''><cfoutput>#title#</cfoutput><cfelse>Journal</cfif></h1>
 
 			<cfif current != 'index.cfm' && current != 'login.cfm'>
 			<div class="pure-menu pure-menu-horizontal large"><cfoutput>

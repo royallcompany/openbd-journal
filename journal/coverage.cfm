@@ -126,7 +126,6 @@
 		  var uState 	= <cfoutput>#serializeJSON( object = URL, conv = "upper" )#</cfoutput>;
 		  treeHeatMap = new TreeHeatMap( '<cfoutput>#url.journal#</cfoutput>', '#treeHeat', uState );
 		  treeMap 		= new TreeMap( '<cfoutput>#url.journal#</cfoutput>', '#treeMap' );
-
 		  var color 	= '';
 
 		  $( '#mode' ).val( uState.MODE ).trigger( 'change' );

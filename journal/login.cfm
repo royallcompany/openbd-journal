@@ -21,6 +21,7 @@
 if( StructKeyExists( form, "journalauth" ) && form.journalauth == "openbdjournal" ) {
 	SetCookie( name="openbdjournalauth", value="ok", httponly=true );
 	location( "index.cfm" );
+  
 } else {
 	SetCookie( name="openbdjournalauth", expires="NOW" );
 }

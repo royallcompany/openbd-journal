@@ -17,19 +17,19 @@
 --->
 <cfcomponent output="false"><cfscript>
 	// Setting up the application
-	this.name = 'OpenBD Journaling';
-	this.sessionmanagement = true;
-	this.clientmanagement = true;
+	this.name 							= 'OpenBD Journaling';
+	this.sessionmanagement 	= true;
+	this.clientmanagement 	= true;
 
 	function onApplicationStart() {
 		// Set up database connection and clean up old table, if it exists.
 	  if ( !DataSourceIsValid( "journaling" ) ) {
 		  ds = {
-			  databasename : "Session1",
-			  drivername : "org.h2.Driver",
-			  hoststring : "jdbc:h2:file:#GetJournalDirectory()#/journaling;MODE=MYSQL;PAGE_SIZE=112000",
-			  username : "",
-			  password : ""
+			  databasename 	: "Session1",
+			  drivername 		: "org.h2.Driver",
+			  hoststring 		: "jdbc:h2:file:#GetJournalDirectory()#/journaling;MODE=MYSQL;PAGE_SIZE=112000",
+			  username 			: "",
+			  password 			: ""
 		  };
 		  DataSourceCreate( "journaling", ds );
 		}

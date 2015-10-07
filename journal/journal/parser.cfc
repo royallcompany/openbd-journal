@@ -43,7 +43,7 @@
 	  * @return {component}
 	  * @throws error if journal file is malformed or cannot be read into database
 	  */
-	public component function init(required string _sPath){
+	public component function init( required string _sPath ){
 		this.sPath = Trim(arguments._sPath);
 
 		// Get basic file information
@@ -56,7 +56,7 @@
 		this.relativeToJournal = Replace( this.sPath, GetJournalDirectory(), '' ).replace("\","/");
 		
 		// For database id, ensures that IDs are unique and easy to replicate elsewhere if needed
-		this.journalShort = Right(reReplace(this.filename, "[^0-9]", "", "ALL"), 8);
+		this.journalShort = Right( reReplace(this.filename, "[^0-9]", "", "ALL"), 8 );
 
 		// Read journal into the database, if it's not already present
 		try {
@@ -72,9 +72,8 @@
 
 
 		//get just the header form the journal
-		var uDetails = journalRead(this.sPath,false);
-
-		var fCount = 0;
+		var uDetails 	= journalRead( this.sPath, false );
+		var fCount 		= 0;
 
 		// Loop over the journal details, and separate info from files
 		/**
@@ -91,17 +90,17 @@
 			*	The key is pointed to a unique number that is referenced in the remaining lines.
 			*/
 		var counter = 1;
-		for (fld in uDetails){
-			if (left(fld,1)!="_" && isStruct(uDetails[fld]) && uDetails[fld].id > 0){
+		for( fld in uDetails ){
+			if( left(fld,1)!="_" && isStruct(uDetails[fld]) && uDetails[fld].id > 0 ){
 				//we have no guarantee the files are coming in order, always have to make sure the array is sized properly
-				if (!arrayIndexExists(this.files,uDetails[fld].id)){
-					arrayResize(this.files, uDetails[fld].id); //creates an array with new indexes set to NULL
+				if ( !arrayIndexExists(this.files,uDetails[fld].id) ){
+					arrayResize( this.files, uDetails[fld].id ); //creates an array with new indexes set to NULL
 				}
 
 				//convert {FILENAME:{id:ID, hash:HASH}} to [{name:FILENAME, hash:HASH}] where the array index=ID
 				this.files[uDetails[fld].id] = { name:fld, hash:uDetails[fld].hash, id: uDetails[fld].id };
 			
-			} else if (left(fld,1) == "_") {//store non-file information seperately
+			} else if ( left(fld,1) == "_" ) {//store non-file information seperately
 				this.info[fld] = uDetails[fld];
 			}
 			
@@ -175,8 +174,8 @@
 	  * @return {string} this.files[arguments._idx]
 	  * @return {string} "Index #arguments._idx# does not exist"
 	  */
-	public string function getFile(required numeric _idx){
-		if (arrayIndexExists(this.files,arguments._idx)){
+	public string function getFile( required numeric _idx ){
+		if ( arrayIndexExists(this.files,arguments._idx) ){
 			return this.files[arguments._idx].name;
 		}
 
@@ -193,8 +192,8 @@
 	  * @param {numeric} _idx (required)
 	  * @return {string}
 	  */
-	public string function getFileHash(required numeric _idx){
-		if (arrayIndexExists(this.files,arguments._idx)){
+	public string function getFileHash( required numeric _idx ){
+		if( arrayIndexExists(this.files,arguments._idx) ){
 			return this.files[arguments._idx].hash;
 		}
 
@@ -212,12 +211,12 @@
 	  * @param {string} [_journal = '']
 	  * @return {string}
 	  */
-	remote string function getPrettyFile(required numeric _idx, string _journal='') returnformat='plain'{
+	remote string function getPrettyFile( required numeric _idx, string _journal='' ) returnformat='plain'{
 		if( len(arguments._journal) > 0 ) {
 			this.init( _sPath = getJournalDirectory() & arguments._journal );
 		}
 
-		return "/" & replace(this.getFile(arguments._idx), expandPath("/").replace("\","/"), "");
+		return "/" & replace( this.getFile(arguments._idx), expandPath("/").replace("\","/"), "" );
 	}
 
 
@@ -259,7 +258,7 @@
 						toDelete = true;
 					}
 				}
-				if(toDelete){
+				if( toDelete ){
 					arrayDeleteAt(ret, i);
 					toDelete = false;
 					i--;
@@ -267,7 +266,7 @@
 			}
 		}
 
-		if( len(url.includes) == 0 && len(url.excludes) == 0 ) {
+		if( len( url.includes ) == 0 && len( url.excludes ) == 0 ) {
 			ret = this.files;
 		}
 
@@ -297,7 +296,7 @@
 	  * @param {numeric} _idx numeric id of the file as defined in the journal file name lookup
 	  * @return {component} journal.source
 	  */
-	public component function GetSource(required numeric _idx){
+	public component function GetSource( required numeric _idx ){
 		// If we already have the source loaded, return it, other wise, go get it
 		try {
 			return this.aSource[sfullPath];
@@ -313,15 +312,15 @@
 			}
 			
 			// Get the number of lines related to this file for stat purpose
-			var lines = this.distinctLinesByFile(_idx);
+			var lines = this.distinctLinesByFile( _idx );
 			
 			// Get the source
-			this.aSource[arguments._idx] = new source(this.getFile(arguments._idx), this.getFileHash(arguments._idx));
+			this.aSource[arguments._idx] = new source( this.getFile(arguments._idx), this.getFileHash(arguments._idx) );
 
 			// Make sure we have lines that were covered, and that the source file has source code in it to calculate coverage with
 			if (lines.recordCount > 0 && this.aSource[arguments._idx].uStats.nSource > 0){
-				this.files[theIndex].coverage = lines.recordCount/this.aSource[arguments._idx].uStats.nSource;
-				this.aCoverage[arguments._idx] = lines.recordCount/this.aSource[arguments._idx].uStats.nSource;
+				this.files[theIndex].coverage 	= lines.recordCount/this.aSource[arguments._idx].uStats.nSource;
+				this.aCoverage[arguments._idx] 	= lines.recordCount/this.aSource[arguments._idx].uStats.nSource;
 
 			} else {
 				this.files[theIndex].coverage = 0;
@@ -342,7 +341,7 @@
 	  * @param {numeric} _idx (required)
 	  * @return {numeric}
 	  */
-	public numeric function getCoverage(required numeric _idx){
+	public numeric function getCoverage( required numeric _idx ){
 		// If we already have the coverage calculated, return it, otherwise, go get it
 		try {
 			// return this.aCoverage[arguments._idx];
@@ -352,8 +351,8 @@
 				}
 			}
 
-		} catch (any e){
-			this.getSource(arguments._idx);
+		} catch ( any e ){
+			this.getSource( arguments._idx );
 			return this.aCoverage[arguments._idx];
 		}
 	}
@@ -377,16 +376,16 @@
 		// The type of data is always through arguments._type
 		switch( arguments._type ){
 			case 'breakdown':
-				var q = this.getTagUsage(arguments._fileId);
+				var q = this.getTagUsage( arguments._fileId );
 			break;
 
 			case 'coverage':
-				var temp = this.getCoverage(arguments._fileId);
-				var q = { 'a': Int(temp * 100), 'b': Int(100 - (temp * 100)) };
+				var temp = this.getCoverage( arguments._fileId );
+				var q = { 'a': Int(temp * 100), 'b': Int( 100 - (temp * 100) ) };
 			break;
 
 			default:
-				throw ("Unsupported _type (" & arguments._type & ")");
+				throw ( "Unsupported _type (" & arguments._type & ")" );
 			break;
 		}
 		return q;
@@ -408,10 +407,10 @@
 		 * TE - Tag End
 		 */
 		var where = "WHERE code IN ('TT', 'TE')";
-		if (arguments._idx != -1){
+		if( arguments._idx != -1 ){
 			where &= " AND file_id=#arguments._idx#";
 		}
-		var ret = queryrun("journaling", "SELECT tag, count(1) as cnt FROM journal #where# AND id=#this.journalShort# GROUP BY tag");
+		var ret = queryrun( "journaling", "SELECT tag, count(1) as cnt FROM journal #where# AND id=#this.journalShort# GROUP BY tag" );
 		return ret;
 	}
 
@@ -476,7 +475,7 @@
 	  * @param {numeric} [lineEnd = 0] journal line number to end before
 	  * @return {query}
 	  */
-	public query function linesByFile(required numeric _idx, numeric lineStart=0, numeric lineEnd=0){
+	public query function linesByFile( required numeric _idx, numeric lineStart=0, numeric lineEnd=0 ){
 		//build the where clause for the QoQ
 		var where 		= "WHERE file_id=?";
 		var auParams 	= [{value:arguments._idx, cfSQLType:"CF_SQL_INTEGER"}];
@@ -497,7 +496,7 @@
 																				"FROM journal " & where & ' AND id=#this.journalShort#',
 																				auParams);
 
-		if (lines.recordCount >= 1){
+		if ( lines.recordCount >= 1 ){
 			//for every line that we return for this file, we need to see if there are other journal lines between this, and the next line
 			var prev = lines.journalid[1];
 			for ( var i=1; i <= lines.recordCount; i++ ){
@@ -549,29 +548,29 @@
 	  * @param {numeric} [lineEnd = 0]
 	  * @return {query}
 	  */
-	public query function distinctLinesByFile(required numeric _idx, numeric lineStart=0, numeric lineEnd=0){
+	public query function distinctLinesByFile( required numeric _idx, numeric lineStart=0, numeric lineEnd=0 ){
 		var where = "WHERE line > 0 AND file_id=? AND id=#this.journalShort#";
 		var auParams = [{value:arguments._idx, cfSQLType:"CF_SQL_INTEGER"}];
 
-		if (arguments.lineStart != 0){
+		if ( arguments.lineStart != 0 ){
 			where &= " AND journalid >= ?";
 			arrayAppend (auParams,{value:arguments.lineStart, cfSQLType:"CF_SQL_INTEGER"});
 		}
 
-		if (arguments.lineEnd != 0){
+		if ( arguments.lineEnd != 0 ){
 			where &= " AND journalid <= ?";
-			arrayAppend (auParams,{value:arguments.lineEnd, cfSQLType:"CF_SQL_INTEGER"});
+			arrayAppend( auParams,{value:arguments.lineEnd, cfSQLType:"CF_SQL_INTEGER"} );
 		}
 
-		cacheCheck = CacheGet(where);
+		cacheCheck = CacheGet( where );
 
 		if ( len(cacheCheck) == 0 ) {
-			var lines = queryRun("journaling", 	"SELECT distinct(line) as line "&
-																					"FROM journal "& where,
-																					auParams);
-			cacheput(SerializeJson(where), lines);
+			var lines = queryRun( "journaling", 	"SELECT distinct(line) as line "&
+														"FROM journal "& where,
+														auParams );
+			cacheput( SerializeJson(where), lines );
 		} else {
-			var lines = DeSerializeJson(cacheCheck);
+			var lines = DeSerializeJson( cacheCheck );
 		}
 		return lines;
 	}
@@ -646,7 +645,7 @@
 			<cfargument name="_jLineEnd" required="false" default=0>
 			<cfscript>
 				//load the journal file
-				this.init(GetJournaldirectory() & arguments._journal);
+				this.init( GetJournaldirectory() & arguments._journal );
 				//get the pretty file name
 				var theFileName = this.getPrettyFile( arguments._file );
 				var redLines 		= 0;
@@ -654,16 +653,17 @@
 				var multiline 	= "";
 
 				//get the journal lines related to this source file
-				var lbf = this.linesByFile( _idx = arguments._file, lineStart = arguments._jLineStart, lineEnd = arguments._jLineEnd );
+				var lbf 		= this.linesByFile( _idx = arguments._file, lineStart = arguments._jLineStart, lineEnd = arguments._jLineEnd );
 
 				//get the source file
-				var srcObj = this.getSource( arguments._file );
+				var srcObj 	= this.getSource( arguments._file );
+				
 				//get the lines of source code
-				var src = srcObj.getSourceLines();
-				arrayDeleteAt(src, arraylen(src));
+				var src 		= srcObj.getSourceLines();
+				arrayDeleteAt( src, arraylen(src) );
 
 				//figure out what the first and last lines of the source we need for this section of journal
-				var minMaxLines = queryNew("mn,mx");
+				var minMaxLines = queryNew( "mn,mx" );
 				if (arguments._jLineStart!= 0 && arguments._jLineEnd != 0){
 					var minMaxLines = queryOfQueryRun("SELECT MIN(line) as mn, MAX(line) as mx " &
 																						"FROM lbf " &
@@ -672,8 +672,8 @@
 				}
 			</cfscript>
 
-			<cfset var theTable="">
-			<cfset counter = 1>
+			<cfset var theTable	= "">
+			<cfset counter 			= 1>
 
 			<!--- Set up the table to be returned and rendered --->
 			<cfsavecontent variable="theTable" trim="true">
@@ -688,55 +688,55 @@
 								var rowClass="";
 
 								//if we are outside the include area, mark as excluded
-								if (arguments._jLineStart > 0 && arguments._jLineEnd > 0  && (i < minMaxLines.mn[1] || i > minMaxLines.mx[1]) ){
+								if( arguments._jLineStart > 0 && arguments._jLineEnd > 0  && (i < minMaxLines.mn[1] || i > minMaxLines.mx[1]) ){
 									rowClass = "exclude";
 								}
 
 								//check for coverage of this line
-								var journalLine 	= queryOfQueryRun("SELECT " & this.dbColumnAliases & " FROM lbf WHERE line=#i# ORDER BY journalid");
-								var filesBetween 	= "";
+								var journalLine 	= queryOfQueryRun( "SELECT " & this.dbColumnAliases & " FROM lbf WHERE line=#i# ORDER BY journalid" );
 								var filesMarker 	= "&nbsp;";
+								var filesBetween 	= "";
 								var codeClass 		= "";
 
 								//check for files files between this journal line and the next line
-								for (row in journalLine){
-									first = listFirst(row.filesBetween);
+								for( row in journalLine ){
+									first = listFirst( row.filesBetween );
 
-									if (listContains(filesBetween,first)==0){
-										filesBetween = listAppend(filesBetween,first);
+									if( listContains(filesBetween,first)==0 ){
+										filesBetween = listAppend( filesBetween, first );
 									}
 								}
 
 								//if we have lines between this and the next line, mark it
-								if (len(filesBetween)>0){
+								if( len(filesBetween)>0 ){
 									//set marker for extra file content
 									filesMarker = "&##x21e8;";
 
 									//get the next journal line id for this file after the current
-									var journalLine2 = queryOfQueryRun("SELECT min(journalid) as journalid FROM lbf WHERE journalid>#journalLine.journalid[1]#");
+									var journalLine2 = queryOfQueryRun( "SELECT min(journalid) as journalid FROM lbf WHERE journalid>#journalLine.journalid[1]#" );
 
 									//build a tag for custom click use
-									src[i].code = Replace(src[i].code, Trim(src[i].code), '<a href="##" data-journal="#arguments._journal#" '&
-																																				'data-file="#listFirst(filesBetween)#" '&
-																																				'data-lineStart="#journalLine.journalid[1]#" '&
-																																				'data-lineEnd="#journalLine2.journalid[1]#">#trim(src[i].code)#</a>', 'ALL');
+									src[i].code = Replace( src[i].code, Trim(src[i].code), '<a href="##" data-journal="#arguments._journal#" '&
+																																				 'data-file="#listFirst(filesBetween)#" '&
+																																				 'data-lineStart="#journalLine.journalid[1]#" '&
+																																				 'data-lineEnd="#journalLine2.journalid[1]#">#trim(src[i].code)#</a>', 'ALL' );
 								}
 								//add class to non-blank, and lines with content
-								if (!src[i].blank && src[i].content != ""){
+								if ( !src[i].blank && src[i].content != "" ){
 									//check if we are already on a multiline statment
-									if (multiline != ""){
+									if ( multiline != "" ){
 										//multiline statments continue the class of the begining line
 										codeClass = multiline;
 										//if we find a Tag End (TE) or Script End (SE), we are done with the multiline
-										if (listFind("TE,SE",src[i].content)){
+										if( listFind("TE,SE",src[i].content) ){
 											multiline = "";
 										}
 									} else {
 
-										if (listFind("CB,CC,CE,C",src[i].content)>=1){
+										if( listFind("CB,CC,CE,C",src[i].content)>=1 ){
 											//this line is a comment, no coverage related
 											codeClass = "hlGrey";
-										} else if (journalLine.recordCount==0){
+										} else if( journalLine.recordCount==0 ){
 											//this line was not covered
 											codeClass = "hlRed";
 										} else {
@@ -745,7 +745,7 @@
 										}
 
 										//check for multiline, so we can flag most multiline statment under the correct class
-										if (listFind("TB,SB",src[i].content)>=1){
+										if( listFind("TB,SB", src[i].content)>=1 ){
 											multiline = codeClass;
 										}
 									}
@@ -786,7 +786,7 @@
 	<cfargument name="_jLineStart" required="false" default=0>
 	<cfargument name="_jLineEnd" required="false" default=0>
 	<cfscript>
-		var lbf = CacheGet('lbf' & arguments._fileId);
+		var lbf = CacheGet( 'lbf' & arguments._fileId );
 
 		if ( isSimpleValue(lbf) ) {
 			lbf = this.linesByFile( _idx = arguments._fileId, lineStart = arguments._jLineStart, lineEnd = arguments._jLineEnd );

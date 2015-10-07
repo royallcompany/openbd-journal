@@ -44,14 +44,14 @@
 		* @param {string} [_rootPath = "/"]  
 		* @return {component}
 		*/
-	public component function init(string _rootPath="/"){
+	public component function init( string _rootPath="/" ){
 		var where 	= "";
-		this.root 	= expandPath(arguments._rootPath).replace("\","/");
-		this.qFiles = directoryList(this.root, true, "query", arrayToList(this.cfExt,"|"));
+		this.root 	= expandPath( arguments._rootPath ).replace( "\","/" );
+		this.qFiles = directoryList( this.root, true, "query", arrayToList(this.cfExt,"|") );
 
 		for( var i=1; i<=arrayLen(this.blackList); i++ ){
 			where &= "name NOT LIKE '#this.blackList[i]#%' ";
-			if (i<arrayLen(this.blackList)){
+			if ( i<arrayLen(this.blackList) ){
 				where &= "AND ";
 			}
 		}
@@ -87,11 +87,11 @@
 		this.spiderHash = this.getSpiderHash();
 		infoPath 				= "/var/tmp/24hr/" & this.spiderHash & ".json";
 
-		if (fileExists(infoPath)){
-			this.info = deserializeJSON(fileRead(infoPath));
+		if ( fileExists(infoPath) ){
+			this.info = deserializeJSON( fileRead(infoPath) );
 		} else {
 			this.spiderFiles();
-			fileWrite(infoPath,serializeJSON(this.info));
+			fileWrite( infoPath,serializeJSON(this.info) );
 		}
 
 		return this;
@@ -105,7 +105,7 @@
 		* @return {string}
 		*/
 	private string function getSpiderHash(){
-		var latest 				= queryOfQueryRun("SELECT max(datelastmodified) as datelastmodified FROM this.qFiles");
+		var latest 				= queryOfQueryRun( "SELECT max(datelastmodified) as datelastmodified FROM this.qFiles" );
 		var spiderString 	= "#this.nFiles# #latest.datelastmodified[1]#";
 		return hash(spiderString);
 	}
@@ -117,18 +117,18 @@
 		*/
 	private void function spiderFiles(){
 
-		for (row in this.qFiles){
-			row.name 			= row.name.replace("\","/");
+		for ( row in this.qFiles ){
+			row.name 			= row.name.replace( "\","/" );
 			var tName 		= row.name;
-			var fName 		= listLast(tName,this.fs);
-			tName 				= replace(tName,fName,"");
-			var insPoint 	= this.getChild(this.info, listFirst(tName,this.fs), listRest(tName,this.fs), true);
-			arrayAppend(insPoint.children,{	root:listFirst(tName,this.fs),
-																			fullPath: row.name,
-																			name:fName,
-																			file_id:-1,
-																			children:[],
-																			stats:this.readFile(row.directory & this.fs & row.name)});
+			var fName 		= listLast( tName,this.fs );
+			tName 				= replace( tName,fName,"" );
+			var insPoint 	= this.getChild( this.info, listFirst(tName,this.fs), listRest(tName,this.fs), true );
+			arrayAppend( insPoint.children, {	root:listFirst(tName,this.fs),
+																				fullPath: row.name,
+																				name:fName,
+																				file_id:-1,
+																				children:[],
+																				stats:this.readFile(row.directory & this.fs & row.name)} );
 		}
 
 	}
@@ -143,23 +143,23 @@
 		* @param {boolean} [bCreate = false]  
 		* @return {struct}
 		*/
-	private struct function getChild(required struct ins, required string first, required string rest, boolean bCreate=false){
+	private struct function getChild( required struct ins, required string first, required string rest, boolean bCreate=false ){
 		if (arguments.first == ""){
 			return arguments.ins;
 		}
 
-		for (var i=1; i<=arrayLen(arguments.ins.children);i++){
-			if (arguments.ins.children[i].name == arguments.first){
-				return this.getChild(arguments.ins.children[i], listFirst(rest,this.fs), listRest(rest,this.fs), arguments.bCreate);
+		for ( var i=1; i<=arrayLen(arguments.ins.children);i++ ){
+			if ( arguments.ins.children[i].name == arguments.first ){
+				return this.getChild( arguments.ins.children[i], listFirst(rest,this.fs), listRest(rest,this.fs), arguments.bCreate );
 			}
 		}
 
-		if (arguments.bCreate) {
+		if ( arguments.bCreate ) {
 			var tmp = {name:arguments.first,children:[]};
-			arrayAppend(ins.children,tmp);
-			return this.getChild(arguments.ins.children[i], listFirst(rest,this.fs), listRest(rest,this.fs), arguments.bCreate);
+			arrayAppend( ins.children, tmp );
+			return this.getChild( arguments.ins.children[i], listFirst(rest,this.fs), listRest(rest,this.fs), arguments.bCreate );
 		} else {
-			throw("element not found #arguments.first# - #arguments.rest#");
+			throw( "element not found #arguments.first# - #arguments.rest#" );
 		}
 	}
 
@@ -171,8 +171,8 @@
 		* @param {string} _sPath (required)   
 		* @return {struct}
 		*/
-	private struct function readFile(required string _sPath){
-		var source = new source(arguments._sPath);
+	private struct function readFile( required string _sPath ){
+		var source = new source( arguments._sPath );
 		return source.uStats;
 	}
 
@@ -183,27 +183,27 @@
 		* @private
 		* @param {string} _sJournal (required)   
 		*/
-	private void function augmentCoverage(required string _sJournal){
+	private void function augmentCoverage( required string _sJournal ){
 		try {
-			var journal = new parser(GetJournaldirectory() & this.fs & _sJournal);
+			var journal = new parser( GetJournaldirectory() & this.fs & _sJournal );
 			var files 	= journal.getFiles();
 
 			for( i in files ) {
 				var reject 	= false;
-				var fPath 	= journal.getPrettyFile(i.id);
-				fPath 			= replace(fPath,this.fs,"","ONE");
+				var fPath 	= journal.getPrettyFile( i.id );
+				fPath 			= replace( fPath,this.fs,"","ONE" );
 
-				for (var j=1; j<= arrayLen(this.blackList); j++){
-					if (left(fPath,len(this.blackList[j])) == this.blackList[j].replace("\","/")){
+				for( var j=1; j<= arrayLen(this.blackList); j++ ){
+					if( left(fPath,len(this.blackList[j])) == this.blackList[j].replace("\","/") ){
 						reject = true;
 					}
 				}
 
-				if (!reject){
-					var fName 						= listLast(fPath,this.fs);
-					var path 							= replace(fPath,fName,"");
-					node 									= this.getChild(this.info, listFirst(fPath,this.fs),listRest(fPath,this.fs), true);
-					node.stats.nCoverage 	= journal.getCoverage(i.id);
+				if ( !reject ){
+					var fName 						= listLast( fPath,this.fs );
+					var path 							= replace( fPath,fName,"" );
+					node 									= this.getChild( this.info, listFirst(fPath,this.fs),listRest(fPath,this.fs), true );
+					node.stats.nCoverage 	= journal.getCoverage( i.id );
 					node.file_id 					= i.id;
 				}
 			}

@@ -26,9 +26,10 @@
 
 	try {
 		// Set up some defaults
-		parser = new journal.parser( GetJournalDirectory() & url.journal );
+		parser 		= new journal.parser( GetJournalDirectory() & url.journal );
 		file1name = parser.getPrettyFile( _idx = url.file, _journal = url.journal );
-		source = parser.getSource( url.file );
+		source 		= parser.getSource( url.file );
+
 	} catch( any err ) {
 		console( err );
 	}
@@ -125,6 +126,7 @@
 					if ( theType == 'coverage' ) {
 						var theData = '"Coverage":{"value":"' + d.a + '","color":"#219CD0"},"Gap":{"value":"' + d.b + '","color":"#0B3A4C"}';
 						getDonut( theData, '"header":"Code Coverage", "showKeys":false, "display":"percentage"', 'source1coverage' );
+
 					} else {
 						var theData = '';
 						for ( item in d[ 'DATA' ] ) {
@@ -135,7 +137,7 @@
 					}
 				},
 				error: function( a, b, c ) {
-					console.log('Something went wrong when trying to generate Donuts');
+					console.log( 'Something went wrong when trying to generate Donuts' );
 				}
 			} );
 		};

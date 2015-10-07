@@ -17,30 +17,35 @@
 --->
 <script type="text/javascript">
 	$( document ).ready( function() {
-		var password = $('#_openbdjournal'),
-			passParent = password.parent();
+		var password 	= $('#_openbdjournal'),
+		passParent 		= password.parent();
 
 		if ( document.cookie.indexOf( '_openbdjournal' ) == -1 ) {
 			$( '#enable' ).show();
 			$( '#disable' ).hide();
+
 		} else {
 			$( '#enable' ).hide();
 			$( '#disable' ).show();
 		}
 		$( '#journalController #enable' ).on( 'click', function() {
-			var uri = $( '#path' ).val();
-			var pass = $( '#_openbdjournal' ).val();
+			var uri 	= $( '#path' ).val();
+			var pass 	= $( '#_openbdjournal' ).val();
+
 			if( $( '#session_capture' ).is( ':checked' ) ) {
 				pass += '-1';
 			}
+			
 			var sep = ( uri.indexOf( '?' ) == -1 ) ? '?' : '&';
 			switch ( $( '#method' ).val() ) {
 				case 'fjournal':
 					return false;
 					break;
+			
 				case 'ujournal':
 					uri = uri + sep + '_openbdjournal=' + pass;
 					break;
+			
 				case 'cJournal':
 					document.cookie = '_openbdjournal=' + pass + '; path=/';
 					$( '#enable' ).hide();
@@ -65,7 +70,6 @@
 		<label for="method">Capture method: 
 			<select name="method" id="method">
 			<option value="ujournal">URL</option>
-			<!--- <option value="fjournal">FORM</option> --->
 			<option value="cJournal">COOKIE</option>
 			</select>
 		</label> 

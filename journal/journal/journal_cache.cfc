@@ -43,12 +43,12 @@ component output="false" {
 		var jrnl = getFromCache( _journalFile );
 
 		// get query of journal entries
-		var parser = new parser( GetJournalDirectory() & _journalFile );
-		var entriesQry = parser.getEntries( _start, _stop );
-		var entries = queryToArr( entriesQry );
+		var parser 			= new parser( GetJournalDirectory() & _journalFile );
+		var entriesQry 	= parser.getEntries( _start, _stop );
+		var entries 		= queryToArr( entriesQry );
+		var sessions 		= {};
 
-		// get unique sessions for the entries
-		var sessions = {};
+		// Get unique sessions for the entries
 		for( var i = 1; i <= ArrayLen( entries ); i++ ) {
 			if( entries[i].session > 0 && !StructKeyExists( sessions, entries[i].session ) ) {
 				//sessions[entries[i].session] = getVarSessionFromCache( _journalFile, entries[i].session );
@@ -72,13 +72,13 @@ component output="false" {
 	remote struct function getJournalEntriesMS( _journalFile, _ms, _entryBuffer ) returnformat="JSON" {
 		var jrnl = getFromCache( _journalFile );
 
-		// get query of journal entries
-		var parser = new parser( GetJournalDirectory() & _journalFile );
-		var entriesQry = parser.getEntriesMS( _ms, _entryBuffer );
-		var entries = queryToArr( entriesQry );
+		// Get query of journal entries
+		var parser 			= new parser( GetJournalDirectory() & _journalFile );
+		var entriesQry 	= parser.getEntriesMS( _ms, _entryBuffer );
+		var entries 		= queryToArr( entriesQry );
+		var sessions 		= {};
 
-		// get unique sessions for the entries
-		var sessions = {};
+		// Get unique sessions for the entries
 		for( var i = 1; i <= ArrayLen( entries ); i++ ) {
 			if( entries[i].session > 0 && !StructKeyExists( sessions, entries[i].session ) ) {
 				//sessions[entries[i].session] = getVarSessionFromCache( _journalFile, entries[i].session );
@@ -123,15 +123,14 @@ component output="false" {
 	* @return {struct}
 	*/
 	private struct function getVarSessionFromCache( _journalFile, _sessionId ) {
-		var cacheId = _journalFile & "_sess_" & _sessionId;
-
-		var sess = CacheGet( cacheId );
+		var cacheId 		= _journalFile & "_sess_" & _sessionId;
+		var sess 				= CacheGet( cacheId );
+		var sessContent = {};
 
 		if( !IsNull( sess ) ) {
 			return sess;
 		}
 
-		var sessContent = {};
 		try {
 			sessContent = JournalReadSession( GetJournalDirectory() &  fileSeparator() & _journalFile, _sessionId );
 		} catch( any err ) {
@@ -152,8 +151,7 @@ component output="false" {
 	* @return {struct} data describing the journal file
 	*/
 	private struct function getFromCache( _journalFile ) {
-		var jrnl = CacheGet( _journalFile );
-
+		var jrnl 						= CacheGet( _journalFile );
 		var dbColumnAliases = "t_offset as t_offset, code as code, file_id as file_id, session as session, file_depth as file_depth, tag_depth as tag_depth, tag as tag, line as line, col as col, fn as fn, scriptline as scriptline, journalid as journalid, id as id";
 
 		if( !IsNull( jrnl ) ) {
@@ -169,10 +167,9 @@ component output="false" {
 		report.buildTree();
 
 		// get query of all frames that occurred during the journalled request
-		var allEntries = queryRun("journaling", "SELECT " & dbColumnAliases & " FROM journal");
-
-		var qry = "SELECT * FROM allEntries WHERE code NOT IN (?)";
-		var qryParams = [ { value: "FE,ME", type: "LIST" } ];
+		var allEntries 	= queryRun("journaling", "SELECT " & dbColumnAliases & " FROM journal");
+		var qry 				= "SELECT * FROM allEntries WHERE code NOT IN (?)";
+		var qryParams 	= [ { value: "FE,ME", type: "LIST" } ];
 
 		// find the file id for the base openbd component.cfc so we can filter that out of the entries
 		for( var i = 1; i <= ArrayLen( report.journal.files ); i++ ) {
@@ -182,20 +179,20 @@ component output="false" {
 			}
 		}
 
-		allEntries = QueryOfQueryRun( qry, qryParams );
-
+		allEntries 	= QueryOfQueryRun( qry, qryParams );
 		var entries = [];
+
 		for( var row in allEntries ) {
 			ArrayAppend( entries, row );
 		}
 
 		// cache the file execution regions as well
 		jrnl = {
-			session_capture: ( StructKeyExists( report.journal.info, "_session" ) ? report.journal.info._session : false ),
-			abspath: journalPath,
-			files: report.journal.files,
-			entries: entries,
-			file_blocks: report.tree
+			session_capture	: ( StructKeyExists( report.journal.info, "_session" ) ? report.journal.info._session : false ),
+			abspath 				: journalPath,
+			files 					: report.journal.files,
+			entries 				: entries,
+			file_blocks 		: report.tree
 		};
 
 		CachePut( _journalFile, jrnl, this.CACHE_TIMEOUT );

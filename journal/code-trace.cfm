@@ -24,18 +24,18 @@
 	jrnl = false;
 	
 	try {
-		jrnl = jrnlCache.getJournal( url.journal );
-
+		jrnl 		= jrnlCache.getJournal( url.journal );
+		
 		// use parser to get the content of the files used during the journalled request
-		parser = new journal.parser( jrnl.abspath );
-		files = [];
+		parser 	= new journal.parser( jrnl.abspath );
+		files 	= [];
+		
 		for ( i = 1; i <= ArrayLen( jrnl.files ); i++ ) {
 			ArrayAppend( files, parser.renderSourceCoverage( i, url.journal ) );
 		}
 
-		allFrames = jrnlCache.getJournalEntries( url.journal );
-
-		helper = new journal.helpers();
+		allFrames 				= jrnlCache.getJournalEntries( url.journal );
+		helper 						= new journal.helpers();
 		filePathToWebRoot = expandPath("/");
 
 		// file names for gantt chart
@@ -111,32 +111,39 @@
 			$( '#reload' ).on( 'click', function() {
 				$( document ).trigger( 'perf:gototime', { elapsedTime: 0 } );
 			} );
+			
 			$( '#play' ).on( 'click', function() {
 				$( '#play' ).addClass( 'pure-button-primary' );
 				$( '#stop' ).removeClass( 'pure-button-primary' );
 				context.play();
 			} );
+
 			$( '#stop' ).on( 'click', function() {
 				$( '#stop' ).addClass( 'pure-button-primary' );
 				$( '#play' ).removeClass( 'pure-button-primary' );
 				context.pause();
 			} );
+
 			$( '#stepforward' ).on( 'click', function() {
 				context.stepLine();
 			} );
+
 			$( '#stepback' ).on( 'click', function() {
 				context.stepLineBack();
 			} );
+
 			$( '#playback-speed' ).on( 'change', function() {
 				var val = $( this ).val();
 				context.setPlaybackSpeed( val );
 				$( '#speed-summary' ).text( val );
 			} );
+
 			$( '#files-to-show' ).on( 'change', function() {
 				var val = $( this ).val();
 				fileTrace.setFilesToShow( val );
 				$( '#files-shown-summary' ).text( val );
 			} );
+
 			$( '#showSessionDump' ).on( 'click', function() {
 				if( $( this ).is( ':checked' ) ) {
 					$( '#var-cont' ).show();
@@ -156,6 +163,7 @@
 					$( '#sessionVars' ).html( _edat.session );
 				}
 			} );
+
 			$( document ).on( 'perf:stepback', function( _e, _edat ) {
 				fileTrace.stepBack( _edat );
 				if ( _edat.elapsedTime ) {
@@ -165,6 +173,7 @@
 					$( '#sessionVars' ).html( _edat.session );
 				}
 			} );
+			
 			$( document ).on( 'perf:gotoline', function( _e, _edat ) {
 				fileTrace.gotoLine( _edat );
 				if ( _edat.session ) {
@@ -172,6 +181,7 @@
 				}
 				timeline.goTo( _edat.elapsedTime );
 			} );
+			
 			$( document ).on( 'perf:gototime', function( _e, _edat ) {
 				if ( _edat.elapsedTime !== false ) {
 					context.gotoTimeMS( _edat.elapsedTime );

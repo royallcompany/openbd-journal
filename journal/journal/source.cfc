@@ -36,28 +36,28 @@
 	  * @param {string} _sPath (required)
 	  * @return {component} this
 	  */
-	public component function init(required string _sPath, string sHash=""){
-		var fObj = fileOpen(_sPath,"read");
+	public component function init( required string _sPath, string sHash="" ){
+		var fObj 		= fileOpen( _sPath,"read" );
 
 		//get the MD5 hash for the file
-		this.fHash = hashBinary(_sPath,"MD5");
+		this.fHash 	= hashBinary( _sPath,"MD5" );
 
 		//if the hash was passed, check if the MD5s match
-		if (len(trim(arguments.sHash)) > 0){
+		if ( len(trim(arguments.sHash)) > 0 ){
 			//MD5 do not match, the file we opened is not the same one we expected
-			this.bHashSync = (this.fHash == arguments.sHash);
+			this.bHashSync = ( this.fHash == arguments.sHash );
 		}
 
 		//loop over the content of the file
-		while (!fileIsEOF(fObj)){
-			var uLine = {code:"",blank:true};
+		while ( !fileIsEOF(fObj) ){
+			var uLine = { code:"", blank:true };
 			//save the source content
-			uLine.code = fileReadLine(fObj);
+			uLine.code = fileReadLine( fObj );
 			//check if the line is blank
-			uLine.blank = (len(trim(uLine.code))==0);
+			uLine.blank = ( len(trim(uLine.code)) == 0 );
 
 			//update stats for blank lines
-			if (uLine.blank){
+			if ( uLine.blank ){
 				this.uStats.nBlank++;
 			} else {
 				this.uStats.nOther++;
@@ -66,16 +66,17 @@
 			uLine.content = "";
 
 			//save the line to an array
-			arrayAppend(this.aSource,uLine);
+			arrayAppend( this.aSource,uLine );
 		}
 
 		//parse the comments
 		this.parseComments();
+
 		//basic parsing the syntax
 		this.parseSyntax();
 
 		//close the file
-		fileClose(fObj);
+		fileClose( fObj );
 
 		return this;
 	}
@@ -94,22 +95,23 @@
 	  */
 	private void function parseComments(){
 		var multiLine = false;
-		var type = "";
+		var type 			= "";
 
 		//loop over all the lines
-		for (var i=1; i <= arrayLen(this.aSource); i++){
+		for ( var i=1; i <= arrayLen(this.aSource); i++ ){
 			uLine = this.aSource[i];
 
 			//if we are working with a multiline comment, we have different rules
-			if (multiLine){
+			if ( multiLine ){
 				//check for closing comment marker, depending on the style of comment
-				if (type == "script" && reFind(".*?\*/.*", uLine.code)>0 ||
-						type == "tag" && reFind(".*?-{3}>.*", uLine.code)>0){
+				if ( type == "script" && reFind(".*?\*/.*", uLine.code)>0 ||
+						 type == "tag" && reFind(".*?-{3}>.*", uLine.code)>0 ){
 					//flag the line as a ending comment, and clear the multiline flag
 					this.uStats.nComments++;
 					this.uStats.nOther--;
 					uLine.content = "CE";
-					multiLine = false;
+					multiLine 		= false;
+
 				} else {
 					//still working on a multiline comment, continue on
 					this.uStats.nComments++;
@@ -122,10 +124,10 @@
 				}
 			} else if (!uLine.blank) {
 				//check for different types of single line comments
-				if (reFind(".*//.*", uLine.code)>0 ||
-						reFind("\n\s*\*", uLine.code)>0 ||
-						reFind(".*/\*.*?\*/.*", uLine.code)>0 ||
-						reFind(".*<!-{3}.*?-{3}>.*", uLine.code)>0){
+				if ( reFind(".*//.*", uLine.code)>0 ||
+						 reFind("\n\s*\*", uLine.code)>0 ||
+						 reFind(".*/\*.*?\*/.*", uLine.code)>0 ||
+						 reFind(".*<!-{3}.*?-{3}>.*", uLine.code)>0 ){
 
 					//check to see if we have content before the comment
 					if ( reFind(".*\w.*//", uLine.code)==0 ) {
@@ -134,14 +136,16 @@
 						this.uStats.nOther--;
 						uLine.content = "CC";
 					}
-				} else if (reFind(".*<!-{3}.*?", uLine.code)>0){
+
+				} else if ( reFind(".*<!-{3}.*?", uLine.code)>0 ){
 					//we have a multiline tag style comment
 					this.uStats.nComments++;
 					this.uStats.nOther--;
 					uLine.content = "CB";
 					multiLine = true;
 					type = "tag";
-				} else if (reFind(".*/\*.*?", uLine.code)>0){
+
+				} else if ( reFind(".*/\*.*?", uLine.code)>0 ){
 					//we have a multiline script style comment
 					this.uStats.nComments++;
 					this.uStats.nOther--;
@@ -172,8 +176,8 @@
 	  */
 	private void function parseSyntax(){
 		var scriptBlock = false;
-		var multiLine = false;
-		for (var i=1; i <= arrayLen(this.aSource); i++){
+		var multiLine 	= false;
+		for( var i=1; i <= arrayLen(this.aSource); i++ ){
 			uLine = this.aSource[i];
 
 			//we don't care about blank lines, or comments
@@ -202,6 +206,7 @@
 								//continue the multiline
 								uLine.content &= "C";
 							}
+
 						} else {
 
 							if (lineTerm > 1){
@@ -219,13 +224,14 @@
 					this.uStats.nOther--;
 
 				} else {
-					if (multiLine){
+					if ( multiLine ){
 						//we are on a multiline statment, check for a terminator...won't work for complex logic statments that involve >
-						var tagSearch = reFind("(.*?)(>)?$",uLine.code,1,true);
-						if (arrayLen(tagSearch.pos)>=3 && tagSearch.pos[3]>=1){
+						var tagSearch = reFind ("(.*?)(>)?$",uLine.code,1,true );
+						if ( arrayLen(tagSearch.pos)>=3 && tagSearch.pos[3]>=1 ){
 							//close ouf the multiline tag
 							uLine.content = "TE";
-							multiLine = false;
+							multiLine 		= false;
+
 						} else {
 							//keep going with the multiline tag
 							uLine.content = "TM";
@@ -234,18 +240,17 @@
 						this.uStats.nSource++;
 					} else {
 						//get the basics of the tag, and see if it terminates
-						var tagSearch = reFind("</?cf(\w*)(.*?)(>)?$",uLine.code,1,true);
+						var tagSearch = reFind( "</?cf(\w*)(.*?)(>)?$",uLine.code,1,true );
 
-
-						if (arrayLen(tagSearch.pos)>1 && tagSearch.pos[1]>=1){
+						if ( arrayLen(tagSearch.pos)>1 && tagSearch.pos[1]>=1 ){
 							//we found a tag, now get the tag name (need to check for cfscript)
-							tag = mid(uLine.code,tagSearch.pos[2], tagSearch.len[2]);
+							tag = mid( uLine.code,tagSearch.pos[2], tagSearch.len[2] );
 							//check to see if this statment closes on the same line
-							if (tagSearch.pos[4]>1 && tagSearch.pos[4]>1){
+							if ( tagSearch.pos[4]>1 && tagSearch.pos[4]>1 ){
 								uLine.content = "TT";
 							} else {
 								//we are starting a multiline statement
-								multiline = true;
+								multiline 		= true;
 								uLine.content = "TS";
 							}
 							this.uStats.nOther--;
@@ -253,7 +258,7 @@
 							this.uStats.nTag++;
 
 							//see if we started a cfscript block for seperate parsing
-							if (tag == "script" || reFind("<cfscript>",uLine.code)){
+							if ( tag == "script" || reFind("<cfscript>",uLine.code) ){
 								scriptBlock = true;
 							}
 						}
