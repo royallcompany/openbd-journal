@@ -184,10 +184,14 @@
 
 			if( uLine.code contains "cfimport" ) {
 				importPrefix = ReMatchNoCase( "prefix\s?=\s?(?:\" & '"' & "|\')(.*)(?:\" & '"' & "|\')", uLine.code );
-				importPrefix = reReplaceNoCase(importPrefix[1], "prefix\s?=\s?", "");
-				importPrefix = left( importPrefix, len(importPrefix)-1 );
-				importPrefix = right( importPrefix, len(importPrefix)-1 );
-				importPrefix = "<" & importPrefix & ":";
+				if( arrayIndexExists( importPrefix, 1 ) ) {
+					importPrefix = reReplaceNoCase(importPrefix[1], "prefix\s?=\s?", "");
+					importPrefix = left( importPrefix, len(importPrefix)-1 );
+					importPrefix = right( importPrefix, len(importPrefix)-1 );
+					importPrefix = "<" & importPrefix & ":";
+				} else {
+					importPrefix = "";
+				}
 			}
 
 			//we don't care about blank lines, or comments
