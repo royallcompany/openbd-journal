@@ -1,27 +1,26 @@
-/**
-	* OpenBD Journaling Tool
-  * Copyright (C) 2015
-  *
-  * This program is free software: you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-  * the Free Software Foundation, either version 3 of the License, or
-  * (at your option) any later version.
-  *
-  * This program is distributed in the hope that it will be useful,
-  * but WITHOUT ANY WARRANTY; without even the implied warranty of
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-	*/
-<cfcomponent output="false">
-	<cfscript>
-	param name="URL.includes" default="";
-	param name="URL.excludes" default="";
+<!---
+	OpenBD Journaling Tool
+  Copyright (C) 2015
+  
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+--->
+<cfcomponent output="false"><cfscript>
+	param name = "URL.includes" default = "";
+	param name = "URL.excludes" default = "";
 
 	// Set up some defaults
-	this.root 	= expandPath("/").replace("\","/");
+	this.root 	= expandPath( "/" ).replace( "\","/" );
 	this.fs 		= "/";
 	this.cfExt 	= [	"*.cfc",
 									"*.cfm",
@@ -32,9 +31,9 @@
 										"CodeChecker#fileSeparator()#",
 										"WEB-INF#fileSeparator()#customtags#fileSeparator()#common"];
 
-	this.qFiles = queryNew("name,attributes,datelastmodified,directory,mode,size,type");
+	this.qFiles = queryNew( "name,attributes,datelastmodified,directory,mode,size,type" );
 	this.nFiles = 0;
-	this.info 	= { name:"SITE", children:[] };
+	this.info 	= { name: "SITE", children: [] };
 
 
 
@@ -87,7 +86,7 @@
 		this.spiderHash = this.getSpiderHash();
 		infoPath 				= "/var/tmp/24hr/" & this.spiderHash & ".json";
 
-		if ( fileExists(infoPath) ){
+		if( fileExists(infoPath) ){
 			this.info = deserializeJSON( fileRead(infoPath) );
 		} else {
 			this.spiderFiles();
@@ -123,12 +122,12 @@
 			var fName 		= listLast( tName,this.fs );
 			tName 				= replace( tName,fName,"" );
 			var insPoint 	= this.getChild( this.info, listFirst(tName,this.fs), listRest(tName,this.fs), true );
-			arrayAppend( insPoint.children, {	root:listFirst(tName,this.fs),
-																				fullPath: row.name,
-																				name:fName,
-																				file_id:-1,
-																				children:[],
-																				stats:this.readFile(row.directory & this.fs & row.name)} );
+			arrayAppend( insPoint.children, {	root 		 :listFirst(tName,this.fs),
+																				fullPath : row.name,
+																				name 		 :fName,
+																				file_id  :-1,
+																				children :[],
+																				stats 	 :this.readFile(row.directory & this.fs & row.name)} );
 		}
 
 	}
@@ -144,18 +143,18 @@
 		* @return {struct}
 		*/
 	private struct function getChild( required struct ins, required string first, required string rest, boolean bCreate=false ){
-		if (arguments.first == ""){
+		if( arguments.first == "" ){
 			return arguments.ins;
 		}
 
-		for ( var i=1; i<=arrayLen(arguments.ins.children);i++ ){
-			if ( arguments.ins.children[i].name == arguments.first ){
+		for( var i=1; i<=arrayLen(arguments.ins.children);i++ ){
+			if( arguments.ins.children[i].name == arguments.first ){
 				return this.getChild( arguments.ins.children[i], listFirst(rest,this.fs), listRest(rest,this.fs), arguments.bCreate );
 			}
 		}
 
-		if ( arguments.bCreate ) {
-			var tmp = {name:arguments.first,children:[]};
+		if( arguments.bCreate ) {
+			var tmp = { name: arguments.first, children: [] };
 			arrayAppend( ins.children, tmp );
 			return this.getChild( arguments.ins.children[i], listFirst(rest,this.fs), listRest(rest,this.fs), arguments.bCreate );
 		} else {
@@ -193,7 +192,7 @@
 				var fPath 	= journal.getPrettyFile( i.id );
 				fPath 			= replace( fPath,this.fs,"","ONE" );
 
-				for( var j=1; j<= arrayLen(this.blackList); j++ ){
+				for( var j = 1; j <= arrayLen(this.blackList); j++ ){
 					if( left(fPath,len(this.blackList[j])) == this.blackList[j].replace("\","/") ){
 						reject = true;
 					}
@@ -227,8 +226,8 @@
 		*/
 		 --->
 	<cffunction name="getHeatTree" access="remote" returntype="struct" returnformat="JSON">
-		<cfargument name="rootPath" required="false" default="/" />
-		<cfargument name="journal"  required="false" default="" />
+		<cfargument name = "rootPath" required = "false" default = "/" />
+		<cfargument name = "journal"  required = "false" default = "" />
 
 		<cfset this.init( arguments.rootPath ) />
 		<cfset arguments.journal = Trim( arguments.journal ) />

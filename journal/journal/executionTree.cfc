@@ -49,7 +49,7 @@ component {
 		*/
 	public array function buildTree(numeric fileId=1, numeric startLine=0, numeric endLine=0, numeric depth=1){
 
-		if (!isObject(this.journal)){
+		if(!isObject(this.journal)){
 			throw("Please init this object first");
 		}
 
@@ -57,7 +57,7 @@ component {
 
 		var current = {};
 		for (var i=1; i<= qLines.recordCount; i++){
-			if (structIsEmpty(current)){
+			if( structIsEmpty(current) ){
 				current.nFile = arguments.fileId;
 				current.nBegin = qLines.journalid[i];
 				current.nTimeBegin = qLines.t_offset[i];
@@ -68,7 +68,7 @@ component {
 			current.nEnd = qLines.journalid[i];
 			current.nTimeEnd = qLines.t_offset[i];
 
-			if (len(trim(qLines.filesBetween[i])) != 0){
+			if( len(trim(qLines.filesBetween[i])) != 0 ){
 				arrayAppend(this.tree,current);
 				this.buildTree(listFirst(qLines.filesBetween[i]), qLines.journalid[i]+1, qLines.journalid[i+1],arguments.depth+1);
 				current = {};
@@ -159,10 +159,10 @@ component {
 		* @return {numeric}
 		*/
 	private numeric function getAccent(required struct entry){
-		if (structKeyExists(URL,"file") && URL.file == arguments.entry.nFile){
-			if (!structKeyExists(URL,"lineStart") && !structKeyExists(URL,"lineEnd") ||
+		if( structKeyExists(URL,"file") && URL.file == arguments.entry.nFile ){
+			if( !structKeyExists(URL,"lineStart") && !structKeyExists(URL,"lineEnd") ||
 					structKeyExists(URL,"lineStart") && URL.lineStart <= arguments.entry.nBegin &&
-									structKeyExists(URL,"lineEnd") && URL.lineEnd >= arguments.entry.nEnd){
+									structKeyExists(URL,"lineEnd") && URL.lineEnd >= arguments.entry.nEnd ){
 				return 1;
 			}
 		}

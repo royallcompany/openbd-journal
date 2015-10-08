@@ -53,14 +53,14 @@
 		<cfargument name="_settings" default='{}' hint="Optional with some defaults, see example file">
 		<cfscript>
 			// In case we're using the default for settings 
-			if ( !isStruct(arguments._data) )			{ arguments._data 		= deserializeJSON(arguments._data); }
-			if ( !isStruct(arguments._settings) )	{ arguments._settings	= deserializeJSON(arguments._settings); }
+			if( !isStruct(arguments._data) )			{ arguments._data 		= deserializeJSON(arguments._data); }
+			if( !isStruct(arguments._settings) )	{ arguments._settings	= deserializeJSON(arguments._settings); }
 
 			// Ensuring that options are still optional, even when the user passes in _settings
-			if ( !structKeyExists(arguments._settings, 'size') ) 			{ arguments._settings.size 			= '150,150'; }
-			if ( !structKeyExists(arguments._settings, 'showKeys') ) 	{ arguments._settings.showKeys 	= true; }
-			if ( !structKeyExists(arguments._settings, 'display') ) 	{ arguments._settings.display 	= 'value'; }
-			if ( !structKeyExists(arguments._settings, 'left') ) 			{ arguments._settings.left 			= true; }
+			if( !structKeyExists(arguments._settings, 'size') ) 			{ arguments._settings.size 			= '150,150'; }
+			if( !structKeyExists(arguments._settings, 'showKeys') ) 	{ arguments._settings.showKeys 	= true; }
+			if( !structKeyExists(arguments._settings, 'display') ) 	{ arguments._settings.display 	= 'value'; }
+			if( !structKeyExists(arguments._settings, 'left') ) 			{ arguments._settings.left 			= true; }
 
 			// Helper contains the color generator
 			var helper = createObject('component','helpers');
@@ -81,17 +81,17 @@
 			var key 						= '';
 
 			// If setting is percentage, we need to do a little math
-			if ( arguments._settings.display == 'percentage' ) {
+			if( arguments._settings.display == 'percentage' ) {
 				for ( item in arguments._data ) {
 					totalForPercent = totalForPercent + arguments._data[item].value;
 				}
 			}
 
 			// If showKeys is true, we prepare the data set for display
-			if ( arguments._settings.showKeys ) {
+			if( arguments._settings.showKeys ) {
 				// Setting up for later displaying values
-				for ( item in arguments._data ) {
-					if ( arguments._settings.display == 'value' ) {
+				for( item in arguments._data ) {
+					if( arguments._settings.display == 'value' ) {
 						data[item] = arguments._data[item].value;
 					} else {
 						data[item] = numberFormat( (arguments._data[item].value / totalForPercent) * 100, '0_' ) & '%';
@@ -100,9 +100,9 @@
 			}
 
 			// Setting up data used in donut & legend
-			for ( item in arguments._data ) {
-				if ( structKeyExists(arguments._data[item], 'color') ) {
-					if (left(arguments._data[item].color, 1) == '##' ) {
+			for( item in arguments._data ) {
+				if( structKeyExists(arguments._data[item], 'color') ) {
+					if( left(arguments._data[item].color, 1) == '##' ) {
 						useColor = arguments._data[item].color;
 					} else {
 						useColor = "##" & arguments._data[item].color;
@@ -111,11 +111,12 @@
 					useColor = colors[counter];
 				}
 
-				arrayAppend(list, [	last,
-														last + arguments._data[item].value,
-														useColor,
-														item,
-														arguments._data[item].value ]);
+				arrayAppend( list, [	last,
+															last + arguments._data[item].value,
+															useColor,
+															item,
+															arguments._data[item].value ]);
+				
 				last 		+= arguments._data[item].value;
 				total 	+= arguments._data[item].value;
 				counter++;

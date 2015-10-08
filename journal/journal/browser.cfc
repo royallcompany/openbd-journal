@@ -29,7 +29,7 @@
 		* @return {query} directory listing
 		*/
 	public query function queryAllJournals(string _sPath="", string _sFile=""){
-		if (left(_sPath,1) != fileSeparator()){
+		if( left(_sPath,1) != fileSeparator() ){
 			arguments._sPath = fileSeparator() & arguments._sPath;
 		}
 		return DirectoryList(this._sPath & arguments._sPath, true, "query", "#arguments._sFile#*.txt", "datelastmodified desc");
@@ -49,7 +49,7 @@
 	public string function getLatestJournal(string _sPath="", string _sFile=""){
 		// Get all journals, then grab just the latest one
 		var qDir = this.queryAllJournals(argumentCollection=arguments);
-		if (qDir.recordCount >= 1){
+		if( qDir.recordCount >= 1 ){
 			return qDir.directory[1] & '/' & qDir.name[1];
 		}
 		return "";
@@ -69,7 +69,7 @@
 	public boolean function purgeJournals(string _sPath="", string _sFile=""){
 		var qDir = this.queryAllJournals(argumentCollection=arguments);
 		var bSuccess = true;
-		for (dir in qDir) {
+		for(dir in qDir) {
 			bSuccess = this.purgeJournal(Dir.directory & '/' & Dir.name) && bSuccess;
 		}
 		return bSuccess;
@@ -90,7 +90,7 @@
 	public boolean function purgeJournal(string _sFullPath){
 		try {
 			var sFile = arguments._sFullPath & '.session';
-			if ( fileExists(sFile) ) {
+			if( fileExists(sFile) ) {
 				fileDelete(sFile);
 			}
 			return fileDelete(arguments._sFullPath);

@@ -68,7 +68,7 @@
 																													recurse:true,
 																													sort:'datelastmodified desc',
 																													filter:'*.txt'} );
-		if ( arrayLen(everything) > 0 ) {
+		if( arrayLen(everything) > 0 ) {
 			return ListLast(everything[1], fileSeparator());
 		} else {
 			return 'none';
@@ -89,11 +89,11 @@
 		var bytesIn = arguments._bytes;
 		var ret = '';
 
-		if ( bytesIn >= 1073741824 ) {
+		if( bytesIn >= 1073741824 ) {
 			ret = numberFormat( bytesIn / 1073741824, '9.9') & ' GB';
-		} else if ( bytesIn >= 1048576 ) {
+		} else if( bytesIn >= 1048576 ) {
 			ret = numberFormat( bytesIn / 1048576, '9.9') & ' MB';
-		} else if ( bytesIn >= 1024 ) {
+		} else if( bytesIn >= 1024 ) {
 			ret = numberFormat( bytesIn / 1024, '9.9') & ' kB';
 		} else {
 			ret = '1> kB';

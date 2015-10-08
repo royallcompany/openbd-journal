@@ -60,12 +60,12 @@
 
 		// Read journal into the database, if it's not already present
 		try {
-			if ( queryRun("journaling", "SELECT distinct(id) FROM journal WHERE id=#this.journalShort#").recordCount == 0 ) {
+			if( queryRun("journaling", "SELECT distinct(id) FROM journal WHERE id=#this.journalShort#").recordCount == 0 ) {
 				JournalReadToDataSource( datasource="journaling", file=this.sPath, id=this.journalShort );
 			}
 		
 		} catch( any e ) {
-			if ( e.detail contains 'Table "JOURNAL" not found' ) {
+			if( e.detail contains 'Table "JOURNAL" not found' ) {
 				JournalReadToDataSource( datasource="journaling", file=this.sPath, id=this.journalShort );
 			}
 		}
@@ -93,14 +93,14 @@
 		for( fld in uDetails ){
 			if( left(fld,1)!="_" && isStruct(uDetails[fld]) && uDetails[fld].id > 0 ){
 				//we have no guarantee the files are coming in order, always have to make sure the array is sized properly
-				if ( !arrayIndexExists(this.files,uDetails[fld].id) ){
+				if( !arrayIndexExists(this.files,uDetails[fld].id) ){
 					arrayResize( this.files, uDetails[fld].id ); //creates an array with new indexes set to NULL
 				}
 
 				//convert {FILENAME:{id:ID, hash:HASH}} to [{name:FILENAME, hash:HASH}] where the array index=ID
 				this.files[uDetails[fld].id] = { name:fld, hash:uDetails[fld].hash, id: uDetails[fld].id };
 			
-			} else if ( left(fld,1) == "_" ) {//store non-file information seperately
+			} else if( left(fld,1) == "_" ) {//store non-file information seperately
 				this.info[fld] = uDetails[fld];
 			}
 			
@@ -175,7 +175,7 @@
 	  * @return {string} "Index #arguments._idx# does not exist"
 	  */
 	public string function getFile( required numeric _idx ){
-		if ( arrayIndexExists(this.files,arguments._idx) ){
+		if( arrayIndexExists(this.files,arguments._idx) ){
 			return this.files[arguments._idx].name;
 		}
 
@@ -318,7 +318,7 @@
 			this.aSource[arguments._idx] = new source( this.getFile(arguments._idx), this.getFileHash(arguments._idx) );
 
 			// Make sure we have lines that were covered, and that the source file has source code in it to calculate coverage with
-			if (lines.recordCount > 0 && this.aSource[arguments._idx].uStats.nSource > 0){
+			if( lines.recordCount > 0 && this.aSource[arguments._idx].uStats.nSource > 0){
 				this.files[theIndex].coverage 	= lines.recordCount/this.aSource[arguments._idx].uStats.nSource;
 				this.aCoverage[arguments._idx] 	= lines.recordCount/this.aSource[arguments._idx].uStats.nSource;
 
@@ -481,13 +481,13 @@
 		var auParams 	= [{value:arguments._idx, cfSQLType:"CF_SQL_INTEGER"}];
 
 		//check for optional line start
-		if (arguments.lineStart != 0){
+		if( arguments.lineStart != 0 ){
 			where &= " AND journalid >= ?";
 			arrayAppend ( auParams,{value:arguments.lineStart, cfSQLType:"CF_SQL_INTEGER"} );
 		}
 
 		//check for optional line end
-		if ( arguments.lineEnd != 0 ){
+		if( arguments.lineEnd != 0 ){
 			where &= " AND journalid <= ?";
 			arrayAppend ( auParams, {value:arguments.lineEnd, cfSQLType:"CF_SQL_INTEGER"} );
 		}
@@ -496,12 +496,12 @@
 																				"FROM journal " & where & ' AND id=#this.journalShort#',
 																				auParams);
 
-		if ( lines.recordCount >= 1 ){
+		if( lines.recordCount >= 1 ){
 			//for every line that we return for this file, we need to see if there are other journal lines between this, and the next line
 			var prev = lines.journalid[1];
-			for ( var i=1; i <= lines.recordCount; i++ ){
+			for( var i=1; i <= lines.recordCount; i++ ){
 
-				if ( lines.journalid[i]-1 > prev ){
+				if( lines.journalid[i]-1 > prev ){
 					//get the file ids for files that were touch between this line, and next
 					querySetCell( lines,"filesBetween",this.getFilesBetween(prev, lines.journalid[i]),i-1 );
 				}
@@ -533,7 +533,7 @@
 
 		//conver the query to a list
 		var result = "";
-		for ( var line in lines ){
+		for( var line in lines ){
 			result = listAppend( result,line.file_id );
 		}
 		return result;
@@ -552,19 +552,19 @@
 		var where = "WHERE line > 0 AND file_id=? AND id=#this.journalShort#";
 		var auParams = [{value:arguments._idx, cfSQLType:"CF_SQL_INTEGER"}];
 
-		if ( arguments.lineStart != 0 ){
+		if( arguments.lineStart != 0 ){
 			where &= " AND journalid >= ?";
 			arrayAppend (auParams,{value:arguments.lineStart, cfSQLType:"CF_SQL_INTEGER"});
 		}
 
-		if ( arguments.lineEnd != 0 ){
+		if( arguments.lineEnd != 0 ){
 			where &= " AND journalid <= ?";
 			arrayAppend( auParams,{value:arguments.lineEnd, cfSQLType:"CF_SQL_INTEGER"} );
 		}
 
 		cacheCheck = CacheGet( where );
 
-		if ( len(cacheCheck) == 0 ) {
+		if( len(cacheCheck) == 0 ) {
 			var lines = queryRun( "journaling", 	"SELECT distinct(line) as line "&
 														"FROM journal "& where,
 														auParams );
@@ -664,7 +664,7 @@
 
 				//figure out what the first and last lines of the source we need for this section of journal
 				var minMaxLines = queryNew( "mn,mx" );
-				if (arguments._jLineStart!= 0 && arguments._jLineEnd != 0){
+				if( arguments._jLineStart!= 0 && arguments._jLineEnd != 0 ){
 					var minMaxLines = queryOfQueryRun("SELECT MIN(line) as mn, MAX(line) as mx " &
 																						"FROM lbf " &
 																						"WHERE line <> '' and tag NOT IN('CFCOMPONENT','CFSCRIPT')");
@@ -722,9 +722,9 @@
 																																				 'data-lineEnd="#journalLine2.journalid[1]#">#trim(src[i].code)#</a>', 'ALL' );
 								}
 								//add class to non-blank, and lines with content
-								if ( !src[i].blank && src[i].content != "" ){
+								if( !src[i].blank && src[i].content != "" ){
 									//check if we are already on a multiline statment
-									if ( multiline != "" ){
+									if( multiline != "" ){
 										//multiline statments continue the class of the begining line
 										codeClass = multiline;
 										//if we find a Tag End (TE) or Script End (SE), we are done with the multiline
@@ -788,7 +788,7 @@
 	<cfscript>
 		var lbf = CacheGet( 'lbf' & arguments._fileId );
 
-		if ( isSimpleValue(lbf) ) {
+		if( isSimpleValue(lbf) ) {
 			lbf = this.linesByFile( _idx = arguments._fileId, lineStart = arguments._jLineStart, lineEnd = arguments._jLineEnd );
 			cacheput('lbf' & arguments._fileId, lbf);
 		}
@@ -801,7 +801,7 @@
 
 		for (i=1;i LTE arrayLen(src);i=i+1) {
 			var journalLines = queryOfQueryRun("SELECT * FROM lbf WHERE line=#i# ORDER BY journalid");
-			if ( journalLines.recordCount > 0 ) {
+			if( journalLines.recordCount > 0 ) {
 				ret += journalLines.recordCount;
 			}
 		}
