@@ -175,10 +175,20 @@
 	  * @private
 	  */
 	private void function parseSyntax(){
-		var scriptBlock = false;
-		var multiLine 	= false;
+		var scriptBlock 	= false;
+		var multiLine 		= false;
+		var importPrefix 	= "";
+
 		for( var i=1; i <= arrayLen(this.aSource); i++ ){
 			uLine = this.aSource[i];
+
+			if( uLine.code contains "cfimport" ) {
+				importPrefix = ReMatchNoCase( "prefix\s?=\s?(?:\" & '"' & "|\')(.*)(?:\" & '"' & "|\')", uLine.code );
+				importPrefix = reReplaceNoCase(importPrefix[1], "prefix\s?=\s?", "");
+				importPrefix = left( importPrefix, len(importPrefix)-1 );
+				importPrefix = right( importPrefix, len(importPrefix)-1 );
+				importPrefix = "<" & importPrefix & ":";
+			}
 
 			//we don't care about blank lines, or comments
 			if (!uLine.blank && uLine.content == ""){
@@ -240,7 +250,15 @@
 						this.uStats.nSource++;
 					} else {
 						//get the basics of the tag, and see if it terminates
-						var tagSearch = reFind( "</?cf(\w*)(.*?)(>)?$",uLine.code,1,true );
+						var tagSearch = reFind( "</?cf(\w*)(.*?)(>)?$", uLine.code, 1, true );
+						
+						// Check if the line contains custom tags, if so set content type and increment counters.
+						if( uLine.code contains importPrefix ){
+							uLine.content = "TT";
+							this.uStats.nOther--;
+							this.uStats.nSource++;
+							this.uStats.nTag++;
+						}
 
 						if ( arrayLen(tagSearch.pos)>1 && tagSearch.pos[1]>=1 ){
 							//we found a tag, now get the tag name (need to check for cfscript)
