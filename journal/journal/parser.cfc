@@ -70,8 +70,7 @@
 			}
 		}
 
-
-		//get just the header form the journal
+		// Get just the header form the journal
 		var uDetails 	= journalRead( this.sPath, false );
 		var fCount 		= 0;
 
@@ -92,26 +91,16 @@
 		var counter = 1;
 		for( fld in uDetails ){
 			if( left(fld,1)!="_" && isStruct(uDetails[fld]) && uDetails[fld].id > 0 ){
-				//we have no guarantee the files are coming in order, always have to make sure the array is sized properly
-				if( !arrayIndexExists(this.files,uDetails[fld].id) ){
-					arrayResize( this.files, uDetails[fld].id ); //creates an array with new indexes set to NULL
-				}
 
 				//convert {FILENAME:{id:ID, hash:HASH}} to [{name:FILENAME, hash:HASH}] where the array index=ID
-				this.files[uDetails[fld].id] = { name:fld, hash:uDetails[fld].hash, id: uDetails[fld].id };
-			
+
+				// Append file data to this.files
+				arrayAppend( this.files, { name:fld, hash:uDetails[fld].hash, id: uDetails[fld].id } );			
 			} else if( left(fld,1) == "_" ) {//store non-file information seperately
 				this.info[fld] = uDetails[fld];
 			}
 			
 			counter++;
-		}
-
-		// Size other array related the source files, so they all match
-		arrayResize( this.aSource, arrayLen(this.files) );		//creates an array with all NULL values
-		arrayResize( this.aCoverage, arrayLen(this.files) );	//creates an array with all NULL values
-		for( i=1; i<= arrayLen(this.aCoverage); i++ ){
-			this.aCoverage[i] = 0;
 		}
 
 		return this;
@@ -175,8 +164,10 @@
 	  * @return {string} "Index #arguments._idx# does not exist"
 	  */
 	public string function getFile( required numeric _idx ){
-		if( arrayIndexExists(this.files,arguments._idx) ){
-			return this.files[arguments._idx].name;
+		for( item in this.files ){
+			if( item.id == arguments._idx ) {
+				return item.name;
+			}
 		}
 
 		return "Index #arguments._idx# does not exist";
@@ -193,10 +184,12 @@
 	  * @return {string}
 	  */
 	public string function getFileHash( required numeric _idx ){
-		if( arrayIndexExists(this.files,arguments._idx) ){
-			return this.files[arguments._idx].hash;
+		for( item in this.files ){
+			if( item.id == arguments._idx ) {
+				return item.hash;
+			}
 		}
-
+		
 		return "Index #arguments._idx# does not exist";
 	}
 
@@ -353,7 +346,7 @@
 
 		} catch ( any e ){
 			this.getSource( arguments._idx );
-			return this.aCoverage[arguments._idx];
+			return this.getCoverage(arguments._idx);
 		}
 	}
 
@@ -392,6 +385,7 @@
 	}
 
 
+
 	/**
 		* Get a breakdown of how many of what tags are used, can limit to a file
 		*
@@ -401,10 +395,10 @@
 	  * @return {query}
 	  */
 	public query function getTagUsage(numeric _idx=-1){
-		/*Only looking at the follow journal codes
-		 * TS - Tag Start
-		 * TT - Tag (with no end tag)
-		 * TE - Tag End
+		/* Only looking at the follow journal codes
+		 *  TS - Tag Start
+		 *  TT - Tag (with no end tag)
+		 *  TE - Tag End
 		 */
 		var where = "WHERE code IN ('TT', 'TE')";
 		if( arguments._idx != -1 ){
@@ -423,11 +417,23 @@
 	  * @return {numeric}
 	  */
 	public numeric function getTotalCoverage(){
+		var tArr = [];
+
 		// Load all the source
 		this.loadAll();
 
+		// Get all averages
+		for( item in this.files ) {
+			// Check if coverage variable exists, otherwise get coverage data.
+			if( structKeyExists(item, "coverage") ) {
+				arrayAppend( tArr, item.coverage );
+			} else {
+				arrayAppend( tArr, getCoverage(item.id) );
+			}
+		}
+
 		// Return an average of coverage for all files in this journal
-		return arrayAvg( this.aCoverage );
+		return arrayAvg( tArr );
 	}
 
 
@@ -449,24 +455,27 @@
 									nOther:0,
 									nCoverage:0};
 
-		//loop of all files
-		for ( i in this.getFiles() ) {
-			//get the source
-			var tmp = this.getSource(i.id);
-			//loop over all stats for the source
-			for (f in tmp.uStats){
-				//add the like stats together
-				total[f] += tmp.uStats[f];
+		// Loop of all files
+		try {
+			for ( i in this.getFiles() ) {
+				// Get the source
+				var tmp = this.getSource(i.id);
+				// Loop over all stats for the source
+				for (f in tmp.uStats){
+					// Add the like stats together
+					total[f] += tmp.uStats[f];
+				}
 			}
-		}
+		} catch( any e ) {
 
+		}
 		return total;
 	}
 
 
 
 	/**
-	  * get all lines that were used for a given file, optionally between a start and end marker
+	  * Get all lines that were used for a given file, optionally between a start and end marker
 	  *
 	  * @method linesByFile
 	  * @public
@@ -476,17 +485,17 @@
 	  * @return {query}
 	  */
 	public query function linesByFile( required numeric _idx, numeric lineStart=0, numeric lineEnd=0 ){
-		//build the where clause for the QoQ
+		// Build the where clause for the QoQ
 		var where 		= "WHERE file_id=?";
 		var auParams 	= [{value:arguments._idx, cfSQLType:"CF_SQL_INTEGER"}];
 
-		//check for optional line start
+		// Check for optional line start
 		if( arguments.lineStart != 0 ){
 			where &= " AND journalid >= ?";
 			arrayAppend ( auParams,{value:arguments.lineStart, cfSQLType:"CF_SQL_INTEGER"} );
 		}
 
-		//check for optional line end
+		// Check for optional line end
 		if( arguments.lineEnd != 0 ){
 			where &= " AND journalid <= ?";
 			arrayAppend ( auParams, {value:arguments.lineEnd, cfSQLType:"CF_SQL_INTEGER"} );

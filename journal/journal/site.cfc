@@ -183,31 +183,27 @@
 		* @param {string} _sJournal (required)   
 		*/
 	private void function augmentCoverage( required string _sJournal ){
-		try {
-			var journal = new parser( GetJournaldirectory() & this.fs & _sJournal );
-			var files 	= journal.getFiles();
+		var journal = new parser( GetJournaldirectory() & this.fs & _sJournal );
+		var files 	= journal.getFiles();
 
-			for( i in files ) {
-				var reject 	= false;
-				var fPath 	= journal.getPrettyFile( i.id );
-				fPath 			= replace( fPath,this.fs,"","ONE" );
+		for( i in files ) {
+			var reject 	= false;
+			var fPath 	= journal.getPrettyFile( i.id );
+			fPath 			= replace( fPath,this.fs,"","ONE" );
 
-				for( var j = 1; j <= arrayLen(this.blackList); j++ ){
-					if( left(fPath,len(this.blackList[j])) == this.blackList[j].replace("\","/") ){
-						reject = true;
-					}
-				}
-
-				if ( !reject ){
-					var fName 						= listLast( fPath,this.fs );
-					var path 							= replace( fPath,fName,"" );
-					node 									= this.getChild( this.info, listFirst(fPath,this.fs),listRest(fPath,this.fs), true );
-					node.stats.nCoverage 	= journal.getCoverage( i.id );
-					node.file_id 					= i.id;
+			for( var j = 1; j <= arrayLen(this.blackList); j++ ){
+				if( left(fPath,len(this.blackList[j])) == this.blackList[j].replace("\","/") ){
+					reject = true;
 				}
 			}
-		} catch( any err ){
-			console( err );
+
+			if ( !reject ){
+				var fName 						= listLast( fPath,this.fs );
+				var path 							= replace( fPath,fName,"" );
+				node 									= this.getChild( this.info, listFirst(fPath,this.fs),listRest(fPath,this.fs), true );
+				node.stats.nCoverage 	= journal.getCoverage( i.id );
+				node.file_id 					= i.id;
+			}
 		}
 	}
 

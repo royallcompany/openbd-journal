@@ -57,8 +57,8 @@
 		}
 		
 	} catch( any err ) {
-		// console( "error encountered in coverage.cfm" );
-		// console( err );
+		console( "error encountered in coverage.cfm" );
+		console( err );
 	}
 		tagStats = journal.getTagUsage();
 		tagDonut = {};
@@ -101,9 +101,9 @@
 			<div id="files-list" class="pure-u-1-3 pure-u-lg-9-24">
 				<h3>Files touched in this Journal</h3>
 				<ul class="coverage_list">
-				<cfloop array="#journal.getFiles()#" index="f">
-					<li><a id="file_#f.id#" href="fileCoverage.cfm?journal=#journal.relativeToJournal#&file=#f.id#">#journal.getPrettyFile( f.id )#</a> <span style="white-space: nowrap">( #int( journal.getCoverage( f.id ) * 1000 ) / 10#% )</span></li>
-				</cfloop>
+					<cfloop array="#journal.getFiles()#" index="f">
+						<li><a id="file_#f.id#" href="fileCoverage.cfm?journal=#journal.relativeToJournal#&file=#f.id#">#journal.getPrettyFile( f.id )#</a> <span style="white-space: nowrap">( #int( journal.getCoverage( f.id ) * 1000 ) / 10#% )</span></li>
+					</cfloop>
 				</ul>
 			</div>
 
