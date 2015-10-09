@@ -20,14 +20,14 @@
 		* Journal information can be found at http://openbd.org/manual/?/journal
 		*/
 
-
-	this.info 			= {};
-	this.files 			= [];
-	this.aSource 		= [];
-	this.aCoverage 	= [];
-	this.sPath 			= '';
-	this.timestamp 	= '';
-	this.filename 	= '';
+	this.info 				= {};
+	this.files 				= [];
+	this.directories	= {};
+	this.aSource 			= [];
+	this.aCoverage 		= [];
+	this.sPath 				= '';
+	this.timestamp 		= '';
+	this.filename 		= '';
 
 	//Use aliases to lowercase column names
 	this.dbColumnAliases = "t_offset as t_offset, code as code, file_id as file_id, session as session, file_depth as file_depth, tag_depth as tag_depth, tag as tag, line as line, col as col, fn as fn, scriptline as scriptline, journalid as journalid, id as id, filesbetween as filesbetween";
@@ -51,10 +51,10 @@
 		this.info._fileSize = this.fileInfo.size;
 		this.timestamp 			= this.fileInfo.lastmodified;
 		this.filename 			= this.fileInfo.name;
-		
+
 		// Calculate the relative file path to the journal directory
 		this.relativeToJournal = Replace( this.sPath, GetJournalDirectory(), '' ).replace("\","/");
-		
+
 		// For database id, ensures that IDs are unique and easy to replicate elsewhere if needed
 		this.journalShort = Right( reReplace(this.filename, "[^0-9]", "", "ALL"), 8 );
 
@@ -63,7 +63,7 @@
 			if( queryRun("journaling", "SELECT distinct(id) FROM journal WHERE id=#this.journalShort#").recordCount == 0 ) {
 				JournalReadToDataSource( datasource="journaling", file=this.sPath, id=this.journalShort );
 			}
-		
+
 		} catch( any e ) {
 			if( e.detail contains 'Table "JOURNAL" not found' ) {
 				JournalReadToDataSource( datasource="journaling", file=this.sPath, id=this.journalShort );
@@ -95,11 +95,11 @@
 				//convert {FILENAME:{id:ID, hash:HASH}} to [{name:FILENAME, hash:HASH}] where the array index=ID
 
 				// Append file data to this.files
-				arrayAppend( this.files, { name:fld, hash:uDetails[fld].hash, id: uDetails[fld].id } );			
+				arrayAppend( this.files, { name:fld, hash:uDetails[fld].hash, id: uDetails[fld].id } );
 			} else if( left(fld,1) == "_" ) {//store non-file information seperately
 				this.info[fld] = uDetails[fld];
 			}
-			
+
 			counter++;
 		}
 
@@ -124,7 +124,7 @@
 		if( _end != -1 && _end > _begin ) {
 			qry &= " AND journalid <= " & _end;
 		}
-		
+
 		var entries = QueryRun( "journaling", qry );
 
 		return entries;
@@ -140,12 +140,12 @@
 		*/
 	public query function getEntriesMS( required numeric _ms, required numeric _bufferSize ) {
 		var qry = QueryRun( "journaling", "SELECT * FROM journal WHERE id = " & this.journalShort & " AND t_offset >= " & _ms );
-		
+
 		if( qry.RecordCount > 0 ) {
 			var index = qry.journalid[1];
 			var qry = "SELECT * FROM journal WHERE id = " & this.journalShort & " AND journalid > " & index - _bufferSize & " AND journalid < " & index + _bufferSize & " ORDER BY journalid ASC";
 			return QueryRun( "journaling", qry );
-		
+
 		} else {
 			var qry = "SELECT * FROM journal WHERE id = " & this.journalShort & " AND journalid > 0 AND journalid < " & _bufferSize & "ORDER BY journalid ASC";
 			return QueryRun( "journaling", qry );
@@ -189,7 +189,7 @@
 				return item.hash;
 			}
 		}
-		
+
 		return "Index #arguments._idx# does not exist";
 	}
 
@@ -223,7 +223,7 @@
 	  */
 	public array function getFiles(){
 		var ret = [];
-		
+
 		if( len(url.includes) > 0 ) {
 			// Check if includes are set
 			if( len(url.includes) > 0 ) {
@@ -268,6 +268,91 @@
 
 
 
+	public struct function getAllFilesInDirectories( _delimiter = "/" ) {
+		var directories = this.directories;
+
+		// Build up the struct once
+		if ( structIsEmpty(directories) ) {
+			var files = this.getFiles();
+			var file;
+			var ids;
+
+			// Build up the directory structure by file name
+			for ( i = 1; i <= arrayLen(files); i++ ) {
+				// prettify file path
+				file = replace(files[i].name, expandPath("/").replace(FileSeparator(), arguments._delimiter), "");
+				// remove filename
+				file = listDeleteAt(file, listLen(file, arguments._delimiter), arguments._delimiter);
+				// clean up the path to match a struct (dashes -> underscore then numbers -> string)
+				file = rereplace(replace(ListChangeDelims(file, '.', arguments._delimiter), '-', '_'), "([0-9])", "NUM_\1", "all");
+
+				// Add the file ids to the end of directory struct
+				if ( !isDefined("directories.#file#") ) {
+					// Create the key for array of ids
+					ids = { journalingfileids: [ files[i].id ] };
+				} else {
+					ids = getVariable("directories.#file#");
+
+					// ensure we have the key
+					if ( !structKeyExists(ids, "journalingfileids") ) {
+						ids.journalingfileids = [];
+					}
+
+					arrayAppend(ids.journalingfileids, files[i].id);
+				}
+
+				setVariable("directories.#file#", ids);
+			}
+		}
+
+		return directories;
+	}
+
+
+
+	public string function getBrowsingTreeMarkup( required _data ) {
+		var jsoup = Html("");
+
+		// Structures: ol > li > ol
+		if ( isStruct(_data) ) {
+			// create the list
+			var list = jsoup.html('<ul class="directory-list"></ul>').select("ul").first();
+
+			// create list items
+			for ( var d in _data ) {
+				if ( isStruct(_data[d]) ) {
+					// insert the list item
+					list.append('<li class="directory-item">
+						<span class="directory-toggle">-</span>
+						<label class="pure-checkbox" for="id-#d#">
+							<input type="checkbox" value="#d#" id="id-#d#">
+							<span class="directory-label">#d#</span>
+						</label>
+						</li>');
+					// directory list
+					list.select("li").last().append(this.getBrowsingTreeMarkup(_data[d]));
+				} else if ( isArray(_data[d]) ) {
+					// file list
+					list.append(this.getBrowsingTreeMarkup(_data[d]));
+				}
+			}
+		}
+		// Arrays: ul > li
+		else if ( isArray(_data) ) {
+			// create the list
+			var list = jsoup.html('<ul class="file-list"></ul>').select("ul").first();
+
+			// create list items
+			for ( i = 1; i <= arrayLen(_data); i++ ) {
+				list.append('<li class="file-item"><a href="fileCoverage.cfm?journal=#this.relativeToJournal#&file=#_data[i]#">#this.getPrettyFile(_data[i])#</a></li>');
+			}
+		}
+
+		return jsoup.html();
+	}
+
+
+
 	/**
 	  * Load all the source files for this journal
 	  *
@@ -296,17 +381,17 @@
 
 		} catch (any e){
 			var theIndex = 0;
-			
+
 			for( i=1; i<=arrayLen(this.files); i++ ) {
 				if( this.files[i].id == _idx ) {
 					theIndex = i;
 					break;
 				}
 			}
-			
+
 			// Get the number of lines related to this file for stat purpose
 			var lines = this.distinctLinesByFile( _idx );
-			
+
 			// Get the source
 			this.aSource[arguments._idx] = new source( this.getFile(arguments._idx), this.getFileHash(arguments._idx) );
 
@@ -666,7 +751,7 @@
 
 				//get the source file
 				var srcObj 	= this.getSource( arguments._file );
-				
+
 				//get the lines of source code
 				var src 		= srcObj.getSourceLines();
 				arrayDeleteAt( src, arraylen(src) );

@@ -81,12 +81,11 @@
 					<th>Output</th>
 					<th>Size</th>
 					<th>Time</th>
-					<th><label><input type="checkbox" id="files-control" checked> Show Coverage Files</label></th>
+					<th><label><input type="checkbox" id="files-control" <!--- checked --->> Show Coverage Files</label></th>
 				</tr>
 			</thead>
 			<cfif (browser.recordCount > 0)>
 			<cfloop query="browser"><cfoutput>
-				<cftry>
 					<cfset journal = brw.getJournal(browser.directory & '/' & browser.name)>
 					<tr>
 						<td><input type="checkbox" name="fl" value="#journal.relativeToJournal#"></td>
@@ -100,24 +99,15 @@
 						<td>#journal.info._bytes# bytes</td>
 						<td>#helper.getNiceSizeFormat( journal.info._fileSize )#</td>
 						<td>#journal.info._timems# ms</td>
-						<td>
-							<ul class="coverage_list">
+						<td> <!--- Set the top parent's class of the directory tree --->
+							#replace(journal.getBrowsingTreeMarkup(journal.getAllFilesInDirectories()), "directory-list", "directory-list-master directory-list")#
+							<!---<ul class="coverage_list">
 							<cfloop array="#journal.getFiles()#" index="f">
 								<li><a href="fileCoverage.cfm?journal=#journal.relativeToJournal#&file=#f.id#">#journal.getPrettyFile(f.id)#</a></li>
 							</cfloop>
-							</ul>
+							</ul> --->
 						</td>
 					</tr>
-				<cfcatch>
-					<tr>
-						<td><input type="checkbox" name="fl" value="#browser.name#"></td>
-						<td colspan="9">
-							An error occurred while reading this journal file.
-						</td>
-					</tr>
-					<cfset console( cfcatch )>
-				</cfcatch>
-				</cftry>
 			</cfoutput></cfloop>
 			<cfelse>
 				<tr><td colspan="9">There are no journal files. Use the form above to journal pages.</td></tr>
@@ -139,40 +129,106 @@
 	<!--- Normal component version --->
 	<script type="text/javascript">
 	$( document ).ready( function() {
-	  $( "#checkAll" ).on( "click", function() {
-	    if ( $( '#checkAll' ).prop( 'checked' ) ) {
-	      $( '[name=fl]' ).prop( 'checked', true );
-	    }
-	    else {
-	      $( '[name=fl]' ).prop( 'checked', false );
-	    }
-	  } );
+		// Toggle selection of all journals
+		$( '#checkAll' ).on( 'click', function() {
+			if ( $( '#checkAll' ).prop( 'checked' ) ) {
+				$( '[name=fl]' ).prop( 'checked', true );
+			} else {
+				$( '[name=fl]' ).prop( 'checked', false );
+			}
+		} );
 
-	  $( "#files-control" ).on( "click", function() {
-	    $( ".coverage_list" ).toggleClass( 'hide' );
-	  } ).trigger( 'click' );
+		// RESUME create / find select-all toggling
+		// include / exclude radios
+		// button to go to page with filter
 
-	  window.latestJournal = '';
+		// Show/hide coverage files and directories
+		// $( '#files-control' ).on( 'click', function() {
+			// if ( this.checked ) {
+			// 	$('.directory-list:has(.hide) > li > .directory-toggle').trigger('click');
+			// } else {
+			// 	$('.directory-list:has(:not(.hide)) > li > .directory-toggle').trigger('click');
+			// }
 
-	  window.setInterval( function() {
-	    $.ajax( {
+			// $( '.directory-list-master' ).toggleClass( 'hide' );
+		// } )
+		//.trigger( 'click' );
+
+		//
+		$( '.directory-list-master' ).a11yTree( {
+			treeLabelId: 'files-control',
+			treeItemLabelSelector: '.directory-label',
+			toggleSelector: '.directory-toggle',
+			onCollapse: function( $item, e ) {
+				$item.children('.directory-toggle').text('+');
+				$item.children( 'ul' ).addClass( 'hide' );
+			},
+			onExpand: function( $item, e ) {
+				$item.children('.directory-toggle').text('-');
+				$item.children( 'ul' ).removeClass( 'hide' );
+			}
+		} );
+
+		$( '.directory-list-master input[type="checkbox"]' ).on( 'click', function() {
+			var $parentCbs,
+				$cb = $( this ),
+				isChecked = $cb.prop( 'checked' ),
+				$parents = $cb.parentsUntil( '.directory-list-master', 'li' );
+
+			// Check all children
+			$cb.closest( 'li' ).find( 'input[type="checkbox"]' ).prop( 'checked', isChecked );
+
+			// Check or "indetermine" parents
+			for ( var i = 1; i < $parents.length; i++ ) {
+				$parentCbs = $parents.eq( i ).find( 'input[type="checkbox"]' );
+
+				if ( $parentCbs.has( ':checked,:not(:checked)' ) ) {
+					$parentCbs.prop( {
+						checked: false,
+						indeterminate: true
+					} );
+				} else if ( $parentCbs.has( ':checked' ) ) {
+					$parentCbs.prop( {
+						checked: true,
+						indeterminate: false
+					} );
+				} else {
+					$parentCbs.prop( {
+						checked: true,
+						indeterminate: false
+					} );
+				}
+			}
+
+			// Uncheck children
+			if ( !isChecked ) {
+				$cb.closest( 'li' ).find( 'ul input[type="checkbox"]' ).prop( 'checked', false );
+			}
+		} );
+
+
+		// Poll for new journal files
+		window.latestJournal = '';
+
+		window.setInterval( function() {
+			$.ajax( {
 				url: 'journal/helpers.cfc?METHOD=latestJournalTimestamp',
 				type: 'POST',
 				dataType: 'HTML',
 				success: function( i ) {
 					if ( window.latestJournal.length == 0 ) {
-			      window.latestJournal = i;
-			    }
+						window.latestJournal = i;
+					}
 
-			    if ( i != window.latestJournal ) {
-			      $( '#checkReload' ).html( '<a href="index.cfm" style="color:red;">There are new journal files, reload?</a>' ).show();
-			    }
+					if ( i != window.latestJournal ) {
+						$( '#checkReload' ).html( '<a href="index.cfm" style="color:red;">There are new journal files, reload?</a>' ).show();
+					}
 				},
 				error: function( a, b, c ) {
-					console.log('Something went wrong when trying to look for new journal files');
+					console.log( 'Something went wrong when trying to look for new journal files' );
 				}
 			} );
-	  }, 4000 );
+		}, 4000 );
 	} );
 	</script>
 <cfinclude template="footer.cfm">

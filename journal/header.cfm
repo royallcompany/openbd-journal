@@ -31,29 +31,38 @@
 	    <link rel="stylesheet" href="assets/css/grid-old-ie.css">
 	<![endif]-->
 
-	<!--- index --->	
+	<!--- all pages --->
 	<link rel="stylesheet" type="text/css" href="assets/css/journaling.css"/>
 	<script type="text/javascript" src="assets/js/vendor/jquery-2.1.3.min.js"></script>
-	<script src="assets/js/journal/bar-graph.js"></script>
 	<cfif current != 'index.cfm'>
-	<script type="text/javascript" src="assets/js/vendor/d3.min.js"></script>
-	<script type="text/javascript" src="assets/js/vendor/d3.tip.js"></script>
+		<script type="text/javascript" src="assets/js/vendor/d3.min.js"></script>
+		<script type="text/javascript" src="assets/js/vendor/d3.tip.js"></script>
+	</cfif>
+
+	<!--- index only --->
+	<cfif current == 'index.cfm'>
+		<script src="assets/js/vendor/jquery.a11yTree.min.js"></script>
+	</cfif>
+
+	<!--- bar --->
+	<cfif current == 'bar.cfm'>
+		<script src="assets/js/journal/bar-graph.js"></script>
 	</cfif>
 
 	<!--- code trace --->
 	<cfif current == 'code-trace.cfm'>
-	<link rel="stylesheet" href="assets/css/code-trace.css" />
-	<script src="assets/js/vendor/jquery.scrollTo.min.js"></script>
-	
-	<!--- code tracer --->
-	<script src="assets/js/journal/source-file-content-cache.js"></script>
-	<script src="assets/js/journal/source-file-factory.js"></script>
-	<script src="assets/js/journal/source-file.js"></script>
-	<script src="assets/js/journal/source-file-tracer.js"></script>
-	<script src="assets/js/journal/request-context.js"></script>
+		<link rel="stylesheet" href="assets/css/code-trace.css" />
+		<script src="assets/js/vendor/jquery.scrollTo.min.js"></script>
 
-	<!--- gantt chart for timeline --->
-	<script src="assets/js/journal/d3.layout.gantt.js"></script>
+		<!--- code tracer --->
+		<script src="assets/js/journal/source-file-content-cache.js"></script>
+		<script src="assets/js/journal/source-file-factory.js"></script>
+		<script src="assets/js/journal/source-file.js"></script>
+		<script src="assets/js/journal/source-file-tracer.js"></script>
+		<script src="assets/js/journal/request-context.js"></script>
+
+		<!--- gantt chart for timeline --->
+		<script src="assets/js/journal/d3.layout.gantt.js"></script>
 	</cfif>
 </head>
 <body>
@@ -70,7 +79,7 @@
 					<!--- <li class="pure-menu-item"><a href="index.cfm" class="pure-menu-link">Home</a></li> --->
 					<cfif url.journal != "">
 					<li class="pure-menu-item"><a href="coverage.cfm?journal=#url.journal#" class="pure-menu-link">Journal: #url.journal#<cfif isDefined('file1name')></cfif></a></li>
-					<cfelse>					
+					<cfelse>
 					<li class="pure-menu-item"><a href="" class="pure-menu-link">#ReReplace(ReReplaceNocase(current, '([A-z]+).cfm', '\u\1'), '([a-z])([A-Z])', '\1 \2', 'ALL')#</a></li>
 					</cfif>
 					<cfif isDefined('file1name')>

@@ -132,6 +132,35 @@ body {
 	vertical-align: baseline;
 }
 
+.directory-list-master {
+}
+.directory-list {
+	list-style: none;
+	padding: 0;
+}
+.directory-item {
+	padding: 0 0 0 18px;
+	margin: 5px;
+	position: relative;
+}
+.directory-item input,
+.directory-item label {
+	position: relative;
+	z-index: 1;
+}
+.directory-toggle {
+	display: block;
+	position: absolute;
+	width: 100%;
+	background-color: #f2f2f2;
+	top: 0;
+	left: 0;
+	z-index: 0;
+	cursor: pointer;
+	font-size: 16px;
+	line-height:12px;
+}
+
 /* coverage */
 .tabs {
 	margin: 0;
@@ -342,7 +371,7 @@ input[type="checkbox"], input[type="radio"] {
 }
 .source-file table {
 	font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;
-	border: 0;	
+	border: 0;
 	text-rendering: optimizeLegibility;
 }
 .source-file a {
