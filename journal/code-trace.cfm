@@ -18,6 +18,8 @@
 <cfsilent><cfscript>
 	title = 'Journal Performance';
 	param name="url.journal" default="";
+	param name = "URL.excludes" default="";
+	param name = "URL.includes" default="";
 
 	jrnlCache = new journal.journal_cache();
 
