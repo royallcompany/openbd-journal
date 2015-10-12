@@ -74,39 +74,42 @@
 			<thead>
 				<tr>
 					<th><input type="checkbox" id="checkAll" title="Select all"></th>
-					<th></th>
 					<th>Journal</th>
+					<th><label><input type="checkbox" id="files-control"> Show All Coverage Files</label></th>
 					<th>Starting URI</th>
 					<th>Created</th>
 					<th>Output</th>
 					<th>Size</th>
 					<th>Time</th>
-					<th><label><input type="checkbox" id="files-control" <!--- checked --->> Show Coverage Files</label></th>
 				</tr>
 			</thead>
 			<cfif (browser.recordCount > 0)>
 			<cfloop query="browser"><cfoutput>
 					<cfset journal = brw.getJournal(browser.directory & '/' & browser.name)>
 					<tr>
-						<td><input type="checkbox" name="fl" value="#journal.relativeToJournal#"></td>
+						<td><input type="checkbox" class="journal-select" name="fl" value="#journal.relativeToJournal#"></td>
 						<td>
-							<a href="coverage.cfm?journal=#journal.relativeToJournal#" class="pure-button button-warning">coverage</a>
-							<cfif !left( journal.relativeToJournal, 9 ) == "/compound"><a href="code-trace.cfm?journal=#journal.relativeToJournal#" class="pure-button button-secondary">performance</a></cfif>
+							#journal.relativeToJournal#
+							<cfif !left( journal.relativeToJournal, 9 ) == "/compound"><br><a href="code-trace.cfm?journal=#journal.relativeToJournal#" class="pure-button button-secondary" style="margin-top:0.5em">performance</a></cfif>
 						</td>
-						<td>#journal.relativeToJournal#</td>
+						<td>
+							<a href="coverage.cfm?journal=#journal.relativeToJournal#" class="pure-button button-warning coverage-btn" style="margin-bottom:0.5em">coverage</a><br>
+							<a href="javascript:void(0);" class="directory-filtering-link">Filter by directory</a>
+							<div class="<!--- hidden ---> directory-filtering">
+								<fieldset>
+									<legend>Filter as:</legend>
+									<label class="pure-radio"><input type="radio" name="typeSwitch#journal.journalShort#" value="include" checked> include</label>
+									<label class="pure-radio"><input type="radio" name="typeSwitch#journal.journalShort#" value="exclude"> exclude</label>
+								</fieldset>
+								<!--- Set the top parent's class and id of the directory tree --->
+								#replace(replace(journal.getBrowsingTreeMarkup(journal.getAllFilesInDirectories()), "directory-list", "directory-list-master directory-list"), "<ul", '<ul id="' & journal.journalShort & '"')#
+							</div>
+						</td>
 						<td>#listFirst(journal.info._uri,"?")#</td>
 						<td>#DateFormat(journal.timestamp, "dd mmm")#, #TimeFormat(journal.timestamp, "hh:mm:ss tt")#</td>
 						<td>#journal.info._bytes# bytes</td>
 						<td>#helper.getNiceSizeFormat( journal.info._fileSize )#</td>
 						<td>#journal.info._timems# ms</td>
-						<td> <!--- Set the top parent's class of the directory tree --->
-							#replace(journal.getBrowsingTreeMarkup(journal.getAllFilesInDirectories()), "directory-list", "directory-list-master directory-list")#
-							<!---<ul class="coverage_list">
-							<cfloop array="#journal.getFiles()#" index="f">
-								<li><a href="fileCoverage.cfm?journal=#journal.relativeToJournal#&file=#f.id#">#journal.getPrettyFile(f.id)#</a></li>
-							</cfloop>
-							</ul> --->
-						</td>
 					</tr>
 			</cfoutput></cfloop>
 			<cfelse>
@@ -116,7 +119,7 @@
 				<td colspan="9">
 					<div style="display:inline-block; vertical-align: middle; margin-right: 1em">
 						<label class="pure-radio"><input type="radio" name="fileOption" value="delete"> Delete selected</label>
-						<label class="pure-radio"><input type="radio" name="fileOption" value="compound" checked="checked"> Compound selected</label>
+						<label class="pure-radio"><input type="radio" name="fileOption" value="compound" checked> Compound selected</label>
 					</div>
 					<input type="submit" value="Do it" class="pure-button pure-button-primary">
 				</td>
@@ -131,80 +134,96 @@
 	$( document ).ready( function() {
 		// Toggle selection of all journals
 		$( '#checkAll' ).on( 'click', function() {
-			if ( $( '#checkAll' ).prop( 'checked' ) ) {
-				$( '[name=fl]' ).prop( 'checked', true );
-			} else {
-				$( '[name=fl]' ).prop( 'checked', false );
-			}
+			$( '.journal-select' ).prop( 'checked', this.checked );
 		} );
 
-		// RESUME create / find select-all toggling
-		// include / exclude radios
-		// button to go to page with filter
 
-		// Show/hide coverage files and directories
-		// $( '#files-control' ).on( 'click', function() {
-			// if ( this.checked ) {
-			// 	$('.directory-list:has(.hide) > li > .directory-toggle').trigger('click');
-			// } else {
-			// 	$('.directory-list:has(:not(.hide)) > li > .directory-toggle').trigger('click');
-			// }
-
-			// $( '.directory-list-master' ).toggleClass( 'hide' );
-		// } )
-		//.trigger( 'click' );
-
-		//
+		// Initialize browsing tree
 		$( '.directory-list-master' ).a11yTree( {
 			treeLabelId: 'files-control',
 			treeItemLabelSelector: '.directory-label',
 			toggleSelector: '.directory-toggle',
+			toggleAllButton: true,
 			onCollapse: function( $item, e ) {
-				$item.children('.directory-toggle').text('+');
-				$item.children( 'ul' ).addClass( 'hide' );
+				$item.children( '.directory-toggle' ).text( '+' );
+				$item.find( 'ul.directory-list' ).addClass( 'hidden' );
 			},
 			onExpand: function( $item, e ) {
-				$item.children('.directory-toggle').text('-');
-				$item.children( 'ul' ).removeClass( 'hide' );
+				$item.children( '.directory-toggle' ).text( '-' );
+				$item.children( 'ul.directory-list' ).removeClass( 'hidden' );
 			}
 		} );
 
-		$( '.directory-list-master input[type="checkbox"]' ).on( 'click', function() {
-			var $parentCbs,
+
+		// Directory browsing related buttons
+		$('#files-control').on('click', function(e){
+			var text = this.checked ? 'Expand all' : 'Collapse all';
+			$('.at-toggle-all:contains('+text+')').trigger('click');
+		})
+
+		$('.directory-filtering-link').on('click', function(e){
+			$(this).siblings('.directory-filtering').toggleClass('hidden');
+		})
+
+
+		// Browsing tree checkbox functionality
+		$( '.directory-list-master input[type="checkbox"]' ).on( 'click', function(){
+			var $parent,
 				$cb = $( this ),
 				isChecked = $cb.prop( 'checked' ),
 				$parents = $cb.parentsUntil( '.directory-list-master', 'li' );
 
-			// Check all children
-			$cb.closest( 'li' ).find( 'input[type="checkbox"]' ).prop( 'checked', isChecked );
+			// Set this cb as the endpoint for later
+			$cb.addClass('endpoint');
 
-			// Check or "indetermine" parents
-			for ( var i = 1; i < $parents.length; i++ ) {
-				$parentCbs = $parents.eq( i ).find( 'input[type="checkbox"]' );
+			// Set all children
+			$parents.eq( 0 ).find( 'ul input[type="checkbox"]' ).prop( {
+				checked: isChecked,
+				indeterminate: false
+			} ).removeClass('endpoint');
 
-				if ( $parentCbs.has( ':checked,:not(:checked)' ) ) {
-					$parentCbs.prop( {
-						checked: false,
-						indeterminate: true
-					} );
-				} else if ( $parentCbs.has( ':checked' ) ) {
-					$parentCbs.prop( {
-						checked: true,
-						indeterminate: false
-					} );
-				} else {
-					$parentCbs.prop( {
-						checked: true,
-						indeterminate: false
-					} );
+			// Set all parents
+			for ( var i = 0; i < $parents.length; i++ ) {
+				$parent = $parents.eq( i );
+				$parent.find( ' > label > input[type="checkbox"]' ).prop( {
+					checked: isChecked,
+					indeterminate: getDetermination( $parent )
+				} );
+			}
+		});
+
+		function getDetermination( $parent ) {
+			var $inputs = $parent.find( 'ul input[type="checkbox"]' );
+
+			if ( $inputs.is( ':not(:checked)' ) && $inputs.is( ':checked' ) ) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+
+		// Add filtering param to coverage button link
+		$('.coverage-btn').on('click', function(e){
+			var $btn = $(this),
+			$div = $btn.siblings('.directory-filtering').has('input[type="checkbox"]:checked'),
+			filter = '&';
+
+			// If user selected directories, build up the list
+			if ( $div.length ) {
+				// include or exclude
+				filter += $btn.siblings('.directory-filtering').find('input:checked').val() + 's=';
+
+				var $cbs = $('.endpoint');
+				for (var i = 0; i < $cbs.length; i++) {
+					filter += $cbs.eq(i).val() + ',';
 				}
 			}
 
-			// Uncheck children
-			if ( !isChecked ) {
-				$cb.closest( 'li' ).find( 'ul input[type="checkbox"]' ).prop( 'checked', false );
-			}
-		} );
+			window.location.href = $btn.prop('href') + filter;
+
+			return false;
+		});
 
 
 		// Poll for new journal files

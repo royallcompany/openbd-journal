@@ -274,24 +274,24 @@
 		// Build up the struct once
 		if ( structIsEmpty(directories) ) {
 			var files = this.getFiles();
-			var file;
+			var dir;
 			var ids;
 
 			// Build up the directory structure by file name
 			for ( i = 1; i <= arrayLen(files); i++ ) {
 				// prettify file path
-				file = replace(files[i].name, expandPath("/").replace(FileSeparator(), arguments._delimiter), "");
+				dir = replace(files[i].name, expandPath("/").replace(FileSeparator(), arguments._delimiter), "");
 				// remove filename
-				file = listDeleteAt(file, listLen(file, arguments._delimiter), arguments._delimiter);
+				dir = listDeleteAt(dir, listLen(dir, arguments._delimiter), arguments._delimiter);
 				// clean up the path to match a struct (dashes -> underscore then numbers -> string)
-				file = rereplace(replace(ListChangeDelims(file, '.', arguments._delimiter), '-', '_'), "([0-9])", "NUM_\1", "all");
+				dir = rereplace(replace(ListChangeDelims(dir, '.', arguments._delimiter), '-', '_DASH_HERE_'), "([0-9])", "NUM_BER_\1", "all");
 
 				// Add the file ids to the end of directory struct
-				if ( !isDefined("directories.#file#") ) {
+				if ( !isDefined("directories.#dir#") ) {
 					// Create the key for array of ids
 					ids = { journalingfileids: [ files[i].id ] };
 				} else {
-					ids = getVariable("directories.#file#");
+					ids = getVariable("directories.#dir#");
 
 					// ensure we have the key
 					if ( !structKeyExists(ids, "journalingfileids") ) {
@@ -301,7 +301,7 @@
 					arrayAppend(ids.journalingfileids, files[i].id);
 				}
 
-				setVariable("directories.#file#", ids);
+				setVariable("directories.#dir#", ids);
 			}
 		}
 
@@ -310,7 +310,7 @@
 
 
 
-	public string function getBrowsingTreeMarkup( required _data ) {
+	public string function getBrowsingTreeMarkup( required _data, string _valuePrefix = "" ) {
 		var jsoup = Html("");
 
 		// Structures: ol > li > ol
@@ -321,19 +321,22 @@
 			// create list items
 			for ( var d in _data ) {
 				if ( isStruct(_data[d]) ) {
+					// revert clean up the path for struct
+					var val = replace(replace(d, 'NUM_BER_', ''), '_DASH_HERE_', '-');
+
 					// insert the list item
 					list.append('<li class="directory-item">
 						<span class="directory-toggle">-</span>
-						<label class="pure-checkbox" for="id-#d#">
-							<input type="checkbox" value="#d#" id="id-#d#">
-							<span class="directory-label">#d#</span>
+						<label class="pure-checkbox">
+							<input type="checkbox" value="#_valuePrefix##val#">
+							<span class="directory-label">#val#</span>
 						</label>
 						</li>');
-					// directory list
-					list.select("li").last().append(this.getBrowsingTreeMarkup(_data[d]));
+					// insert next directory list
+					list.select("li").last().append(this.getBrowsingTreeMarkup(_data[d], _valuePrefix & val & "/"));
 				} else if ( isArray(_data[d]) ) {
 					// file list
-					list.append(this.getBrowsingTreeMarkup(_data[d]));
+					list.prepend('<li></li>').select('li').first().append(this.getBrowsingTreeMarkup(_data[d]));
 				}
 			}
 		}
