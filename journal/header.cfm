@@ -41,7 +41,7 @@
 
 	<!--- index only --->
 	<cfif current == 'index.cfm'>
-		<script src="assets/js/vendor/jquery.a11yTree.min.js"></script>
+		<script src="assets/js/vendor/jquery.a11yTree.js"></script>
 	</cfif>
 
 	<!--- bar --->

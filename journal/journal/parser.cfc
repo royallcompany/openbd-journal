@@ -224,6 +224,9 @@
 	public array function getFiles(){
 		var ret = [];
 
+		param name="url.includes" default = "";
+		param name="url.excludes" default = "";
+
 		if( len(url.includes) > 0 ) {
 			// Check if includes are set
 			if( len(url.includes) > 0 ) {
@@ -301,7 +304,11 @@
 					arrayAppend(ids.journalingfileids, files[i].id);
 				}
 
-				setVariable("directories.#dir#", ids);
+				try {
+					setVariable("directories.#dir#", ids);
+				} catch ( any err ) {
+					console(SerializeJson(err));
+				}
 			}
 		}
 

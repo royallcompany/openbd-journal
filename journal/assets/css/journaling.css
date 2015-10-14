@@ -158,8 +158,31 @@ body {
 	line-height:12px;
 }
 .directory-filtering-link {
-	color: #666;
+	color: #0992cd;
 	margin: 0 0 0.5em 0;
+	text-decoration: none;
+	display: block;
+}
+.dropdown-close {
+	margin-bottom: 1em;
+}
+.dropdown-open:after {
+	content: "\25B2";
+	display: inline-block;
+	font-size: 0.8em;
+	margin-left: 0.5em;
+	line-height: 1.2em
+}
+.dropdown-close:after {
+	content: "\25BC";
+	display: inline-block;
+	font-size: 0.8em;
+	margin-left: 0.5em;
+	line-height: 1.2em
+}
+.directory-filtering fieldset {
+	display: inline-block;
+	padding-right: 1em;
 }
 
 /* coverage */
@@ -245,6 +268,10 @@ input[type="checkbox"], input[type="radio"] {
 }
 .button-secondary {
 	background: #24A7DF;
+	color: white !important;
+}
+.button-info {
+	background: #A6A6A6;
 	color: white !important;
 }
 .top-buttons .pure-button-active, .top-buttons .pure-button:active {

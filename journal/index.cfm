@@ -19,9 +19,6 @@
 <cfset brw 		= new journal.browser()>
 <cfset helper = new journal.helpers()>
 
-<cfparam name = "URL.includes" default="">
-<cfparam name = "URL.excludes" default="">
-
 <!--- File option, deleting and compounding files --->
 <cfif structKeyExists(form, "fileOption") AND structKeyExists(form, "fl")>
 	<!--- Check the option chosen --->
@@ -50,9 +47,6 @@
 		<cfelse>
 			<cfsavecontent variable="message"><span style="color:red;">To create a compound file, you need to select a start and end file.</span></cfsavecontent>
 		</cfif>
-	<cfelse>
-
-		<cfsavecontent variable="message">I've no idea how you managed to get to the else switch, go you!</cfsavecontent>
 	</cfif>
 </cfif>
 
@@ -66,7 +60,7 @@
 
 	<cfif (!structKeyExists(URL,"j"))>
 
-	<h3 id="checkReload" style="visible:none;">&nbsp;</h3>
+	<p id="checkReload" style="visible:none;">&nbsp;</p>
 
 	<cfset browser = brw.queryAllJournals("","",true)>
 	<form action="" method="post" class="pure-form">
@@ -94,8 +88,8 @@
 						</td>
 						<td>
 							<a href="coverage.cfm?journal=#journal.relativeToJournal#" class="pure-button button-warning coverage-btn" style="margin-bottom:0.5em">coverage</a><br>
-							<a href="javascript:void(0);" class="directory-filtering-link">Filter by directory</a>
-							<div class="<!--- hidden ---> directory-filtering">
+							<a href="javascript:void(0);" class="directory-filtering-link dropdown-open">Filter by directory</a>
+							<div class="hidden directory-filtering">
 								<fieldset>
 									<legend>Filter as:</legend>
 									<label class="pure-radio"><input type="radio" name="typeSwitch#journal.journalShort#" value="include" checked> include</label>
@@ -132,100 +126,6 @@
 	<!--- Normal component version --->
 	<script type="text/javascript">
 	$( document ).ready( function() {
-		// Toggle selection of all journals
-		$( '#checkAll' ).on( 'click', function() {
-			$( '.journal-select' ).prop( 'checked', this.checked );
-		} );
-
-
-		// Initialize browsing tree
-		$( '.directory-list-master' ).a11yTree( {
-			treeLabelId: 'files-control',
-			treeItemLabelSelector: '.directory-label',
-			toggleSelector: '.directory-toggle',
-			toggleAllButton: true,
-			onCollapse: function( $item, e ) {
-				$item.children( '.directory-toggle' ).text( '+' );
-				$item.find( 'ul.directory-list' ).addClass( 'hidden' );
-			},
-			onExpand: function( $item, e ) {
-				$item.children( '.directory-toggle' ).text( '-' );
-				$item.children( 'ul.directory-list' ).removeClass( 'hidden' );
-			}
-		} );
-
-
-		// Directory browsing related buttons
-		$('#files-control').on('click', function(e){
-			var text = this.checked ? 'Expand all' : 'Collapse all';
-			$('.at-toggle-all:contains('+text+')').trigger('click');
-		})
-
-		$('.directory-filtering-link').on('click', function(e){
-			$(this).siblings('.directory-filtering').toggleClass('hidden');
-		})
-
-
-		// Browsing tree checkbox functionality
-		$( '.directory-list-master input[type="checkbox"]' ).on( 'click', function(){
-			var $parent,
-				$cb = $( this ),
-				isChecked = $cb.prop( 'checked' ),
-				$parents = $cb.parentsUntil( '.directory-list-master', 'li' );
-
-			// Set this cb as the endpoint for later
-			$cb.addClass('endpoint');
-
-			// Set all children
-			$parents.eq( 0 ).find( 'ul input[type="checkbox"]' ).prop( {
-				checked: isChecked,
-				indeterminate: false
-			} ).removeClass('endpoint');
-
-			// Set all parents
-			for ( var i = 0; i < $parents.length; i++ ) {
-				$parent = $parents.eq( i );
-				$parent.find( ' > label > input[type="checkbox"]' ).prop( {
-					checked: isChecked,
-					indeterminate: getDetermination( $parent )
-				} );
-			}
-		});
-
-		function getDetermination( $parent ) {
-			var $inputs = $parent.find( 'ul input[type="checkbox"]' );
-
-			if ( $inputs.is( ':not(:checked)' ) && $inputs.is( ':checked' ) ) {
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-
-		// Add filtering param to coverage button link
-		$('.coverage-btn').on('click', function(e){
-			var $btn = $(this),
-			$div = $btn.siblings('.directory-filtering').has('input[type="checkbox"]:checked'),
-			filter = '&';
-
-			// If user selected directories, build up the list
-			if ( $div.length ) {
-				// include or exclude
-				filter += $btn.siblings('.directory-filtering').find('input:checked').val() + 's=';
-
-				var $cbs = $('.endpoint');
-				for (var i = 0; i < $cbs.length; i++) {
-					filter += $cbs.eq(i).val() + ',';
-				}
-			}
-
-			window.location.href = $btn.prop('href') + filter;
-
-			return false;
-		});
-
-
 		// Poll for new journal files
 		window.latestJournal = '';
 
@@ -250,4 +150,5 @@
 		}, 4000 );
 	} );
 	</script>
+	<script src="assets/js/journal/journalTable.js"></script>
 <cfinclude template="footer.cfm">
