@@ -57,12 +57,12 @@
 		// Read journal into the database, if it's not already present
 		try {
 			if( queryRun("journaling", "SELECT distinct(id) FROM journal WHERE id=#this.journalShort#").recordCount == 0 ) {
-				JournalReadToDataSource( datasource="journaling", file=this.sPath, id=this.journalShort );
+				JournalReadToDataSource( datasource="journaling", file=this.sPath, id=this.journalShort, table="journal" );
 			}
 
 		} catch( any e ) {
 			if( e.detail contains 'Table "JOURNAL" not found' ) {
-				JournalReadToDataSource( datasource="journaling", file=this.sPath, id=this.journalShort );
+				JournalReadToDataSource( datasource="journaling", file=this.sPath, id=this.journalShort, table="journal" );
 			}
 		}
 

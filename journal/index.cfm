@@ -16,139 +16,46 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --->
 <cfset title 	= 'Journal Files'>
-<cfset brw 		= new journal.browser()>
-<cfset helper = new journal.helpers()>
-
-<!--- File option, deleting and compounding files --->
-<cfif structKeyExists(form, "fileOption") AND structKeyExists(form, "fl")>
-	<!--- Check the option chosen --->
-	<cfif form.fileOption == "delete">
-		<!--- Make sure the list is not empty --->
-		<cfif Len(form.fl) GT 0>
-			<cfloop list="#form.fl#" index="ind">
-				<cfset brw.purgeJournal( getJournalDirectory() & '/' & ind)>
-			</cfloop>
-			<cfsavecontent variable="message"><cfoutput>
-				<span style="color:green;">#ListLen(form.fl)# file<cfif ListLen(form.fl) GT 1>s</cfif> deleted.</span><br>
-			</cfoutput></cfsavecontent>
-		</cfif>
-
-	<cfelseif form.fileOption == "compound">
-		<!--- Make sure the list contains at least two files --->
-		<cfif listLen(form.fl) GT 1>
-			<cfset cmp 				= CreateObject("component", "journal.compound")>
-			<cfset list 			= listToArray( listSort(form.fl, "text") )>
-			<cfset compStatus = cmp.compoundJournals( _files = form.fl )>
-			<cfif compStatus._success>
-				<cfsavecontent variable="message"><span style="color:green;">Files compounded!</span></cfsavecontent>
-			<cfelse>
-				<cfsavecontent variable="message"><span style="color:red;">Compound failed!</span></cfsavecontent>
-			</cfif>
-		<cfelse>
-			<cfsavecontent variable="message"><span style="color:red;">To create a compound file, you need to select a start and end file.</span></cfsavecontent>
-		</cfif>
-	</cfif>
-</cfif>
 
 <cfinclude template="header.cfm">
 
 	<cfinclude template="settings.cfm">
 
-	<cfif isDefined('message')>
-		<p><cfoutput>#message#</cfoutput></p>
-	</cfif>
-
 	<cfif (!structKeyExists(URL,"j"))>
 
-	<p id="checkReload" style="visible:none;">&nbsp;</p>
+	<p id="messageP"></p>
 
-	<cfset browser = brw.queryAllJournals("","",true)>
+	<cfset handler = new journal.handler()>
+
 	<form action="" method="post" class="pure-form">
 		<table id="allJournals" border="0" cellspacing="0" class="pure-table pure-table-bordered pure-table-striped text-top">
 			<thead>
 				<tr>
-					<th><input type="checkbox" id="checkAll" title="Select all"></th>
-					<th>Journal</th>
-					<th><label><input type="checkbox" id="files-control"> Show All Coverage Files</label></th>
-					<th>Starting URI</th>
-					<th>Created</th>
-					<th>Output</th>
-					<th>Size</th>
-					<th>Time</th>
+					<th data-dynatable-no-sort="true"><input type="checkbox" id="checkAll" title="Select all"></th>
+					<th data-dynatable-column="NAME">Journal</th>
+					<th data-dynatable-no-sort="true"><label><input type="checkbox" id="files-control"> Show All Coverage Files</label></th>
+					<th data-dynatable-column="STARTINGURI">Starting URI</th>
+					<th data-dynatable-column="CREATED">Created</th>
+					<th data-dynatable-column="OUTPUT">Output</th>
+					<th data-dynatable-column="SIZE">Size</th>
+					<th data-dynatable-column="TIME">Time</th>
 				</tr>
 			</thead>
-			<cfif (browser.recordCount > 0)>
-			<cfloop query="browser"><cfoutput>
-					<cfset journal = brw.getJournal(browser.directory & '/' & browser.name)>
-					<tr>
-						<td><input type="checkbox" class="journal-select" name="fl" value="#journal.relativeToJournal#"></td>
-						<td>
-							#journal.relativeToJournal#
-							<cfif !left( journal.relativeToJournal, 9 ) == "/compound"><br><a href="code-trace.cfm?journal=#journal.relativeToJournal#" class="pure-button button-secondary" style="margin-top:0.5em">performance</a></cfif>
-						</td>
-						<td>
-							<a href="coverage.cfm?journal=#journal.relativeToJournal#" class="pure-button button-warning coverage-btn" style="margin-bottom:0.5em">coverage</a><br>
-							<a href="javascript:void(0);" class="directory-filtering-link dropdown-open">Filter by directory</a>
-							<div class="hidden directory-filtering">
-								<fieldset>
-									<legend>Filter as:</legend>
-									<label class="pure-radio"><input type="radio" name="typeSwitch#journal.journalShort#" value="include" checked> include</label>
-									<label class="pure-radio"><input type="radio" name="typeSwitch#journal.journalShort#" value="exclude"> exclude</label>
-								</fieldset>
-								<!--- Set the top parent's class and id of the directory tree --->
-								#replace(replace(journal.getBrowsingTreeMarkup(journal.getAllFilesInDirectories()), "directory-list", "directory-list-master directory-list"), "<ul", '<ul id="' & journal.journalShort & '"')#
-							</div>
-						</td>
-						<td>#listFirst(journal.info._uri,"?")#</td>
-						<td>#DateFormat(journal.timestamp, "dd mmm")#, #TimeFormat(journal.timestamp, "hh:mm:ss tt")#</td>
-						<td>#journal.info._bytes# bytes</td>
-						<td>#helper.getNiceSizeFormat( journal.info._fileSize )#</td>
-						<td>#journal.info._timems# ms</td>
-					</tr>
-			</cfoutput></cfloop>
-			<cfelse>
-				<tr><td colspan="9">There are no journal files. Use the form above to journal pages.</td></tr>
-			</cfif>
-			<tr>
-				<td colspan="9">
-					<div style="display:inline-block; vertical-align: middle; margin-right: 1em">
-						<label class="pure-radio"><input type="radio" name="fileOption" value="delete"> Delete selected</label>
-						<label class="pure-radio"><input type="radio" name="fileOption" value="compound" checked> Compound selected</label>
-					</div>
-					<input type="submit" value="Do it" class="pure-button pure-button-primary">
-				</td>
-			</tr>
+			<tbody>
+				<tr>
+					<td colspan="9">
+						<div style="display:inline-block; vertical-align: middle; margin-right: 1em">
+							<label class="pure-radio"><input type="radio" name="fileOption" value="delete"> Delete selected</label>
+							<label class="pure-radio"><input type="radio" name="fileOption" value="compound" checked> Compound selected</label>
+						</div>
+						<input type="submit" value="Do it" class="pure-button pure-button-primary">
+					</td>
+				</tr>
+			</tbody>
 		</table>
 	</form>
 
 	</cfif>
 
-	<!--- Normal component version --->
-	<script type="text/javascript">
-	$( document ).ready( function() {
-		// Poll for new journal files
-		window.latestJournal = '';
-
-		window.setInterval( function() {
-			$.ajax( {
-				url: 'journal/helpers.cfc?METHOD=latestJournalTimestamp',
-				type: 'POST',
-				dataType: 'HTML',
-				success: function( i ) {
-					if ( window.latestJournal.length == 0 ) {
-						window.latestJournal = i;
-					}
-
-					if ( i != window.latestJournal ) {
-						$( '#checkReload' ).html( '<a href="index.cfm" style="color:red;">There are new journal files, reload?</a>' ).show();
-					}
-				},
-				error: function( a, b, c ) {
-					console.log( 'Something went wrong when trying to look for new journal files' );
-				}
-			} );
-		}, 4000 );
-	} );
-	</script>
-	<script src="assets/js/journal/journalTable.js"></script>
+	<script src="assets/js/journal/journalTable.js"></script> d
 <cfinclude template="footer.cfm">
