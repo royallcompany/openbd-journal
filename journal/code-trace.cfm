@@ -18,26 +18,20 @@
 <cfsilent><cfscript>
 	title = 'Journal Performance';
 	param name="url.journal" default="";
-	param name = "URL.excludes" default="";
-	param name = "URL.includes" default="";
-
 	jrnlCache = new journal.journal_cache();
 
-	jrnl = false;
-	
 	try {
 		jrnl 		= jrnlCache.getJournal( url.journal );
-		
+
 		// use parser to get the content of the files used during the journalled request
 		parser 	= new journal.parser( jrnl.abspath );
 		files 	= [];
-		
+
 		for ( i = 1; i <= ArrayLen( jrnl.files ); i++ ) {
 			ArrayAppend( files, parser.renderSourceCoverage( i, url.journal ) );
 		}
 
 		allFrames 				= jrnlCache.getJournalEntries( url.journal );
-		helper 						= new journal.helpers();
 		filePathToWebRoot = expandPath("/");
 
 		// file names for gantt chart
@@ -109,11 +103,11 @@
 			// tracks the current journal line, current source file, and current line in the source file
 			var context = new RequestContext( '<cfoutput>#url.journal#</cfoutput>' );
 
-			// playback controls			
+			// playback controls
 			$( '#reload' ).on( 'click', function() {
 				$( document ).trigger( 'perf:gototime', { elapsedTime: 0 } );
 			} );
-			
+
 			$( '#play' ).on( 'click', function() {
 				$( '#play' ).addClass( 'pure-button-primary' );
 				$( '#stop' ).removeClass( 'pure-button-primary' );
@@ -175,7 +169,7 @@
 					$( '#sessionVars' ).html( _edat.session );
 				}
 			} );
-			
+
 			$( document ).on( 'perf:gotoline', function( _e, _edat ) {
 				fileTrace.gotoLine( _edat );
 				if ( _edat.session ) {
@@ -183,7 +177,7 @@
 				}
 				timeline.goTo( _edat.elapsedTime );
 			} );
-			
+
 			$( document ).on( 'perf:gototime', function( _e, _edat ) {
 				if ( _edat.elapsedTime !== false ) {
 					context.gotoTimeMS( _edat.elapsedTime );
@@ -286,6 +280,6 @@
 		<!--- end source file content --->
 
 	</cfif>
-		
+
 
 <cfinclude template="footer.cfm">

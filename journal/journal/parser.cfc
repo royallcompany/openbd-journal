@@ -29,10 +29,6 @@
 	this.timestamp 		= '';
 	this.filename 		= '';
 
-	//Use aliases to lowercase column names
-	this.dbColumnAliases = "t_offset as t_offset, code as code, file_id as file_id, session as session, file_depth as file_depth, tag_depth as tag_depth, tag as tag, line as line, col as col, fn as fn, scriptline as scriptline, journalid as journalid, id as id, filesbetween as filesbetween";
-
-
 
 	/**
 		* Initializes component, does not load the journal into memory
@@ -114,6 +110,7 @@
 	  * @param {numeric} [_begin = -1]
 	  * @param {numeric} [_end = -1 ]
 	  * @return {query}
+	  *
 	  */
 	public query function getEntries( numeric _begin=-1, numeric _end=-1 ) {
 		var qry = "SELECT * FROM journal WHERE id = " & this.journalShort;
@@ -137,6 +134,7 @@
 		* @param {numeric} _ms
 		* @param {numeric} _bufferSize
 		* @return {query}
+		*
 		*/
 	public query function getEntriesMS( required numeric _ms, required numeric _bufferSize ) {
 		var qry = QueryRun( "journaling", "SELECT * FROM journal WHERE id = " & this.journalShort & " AND t_offset >= " & _ms );
@@ -722,6 +720,24 @@
 	}
 
 
+
+	/**
+	* Converts a journal file path to a relative to webroot journal file path
+	*
+	* @method getWebRootRelativeJournalFilePath
+	* @public
+	* @param {string} _journal_file_path (required)
+	* @param {string} _file_path_to_webroot (required)
+	* @return {string}
+	*/
+	public string function getWebRootRelativeJournalFilePath( required string _journal_file_path, required string _file_path_to_webroot ) {
+		//journal file paths are not OS specific
+		var filePath = replace( arguments._file_path_to_webroot, "\", "/", "ALL" );
+
+		return "/" & replace( arguments._journal_file_path, filePath, "" );
+	}
+
+
 </cfscript>
 
 
@@ -741,6 +757,8 @@
 		  * @returnformat {plain}
 		  * @return {string}
 		  */
+
+code trace
 		--->
 <cffunction name="renderSourceCoverage" access="remote" returntype="string" returnformat="plain">
 			<cfargument name="_file" required="true">
@@ -755,6 +773,8 @@
 				var redLines 		= 0;
 				var greenLines 	= 0;
 				var multiline 	= "";
+				var dbColumnAliases = "t_offset as t_offset, code as code, file_id as file_id, session as session, file_depth as file_depth, tag_depth as tag_depth, tag as tag, line as line, col as col, fn as fn, scriptline as scriptline, journalid as journalid, id as id, filesbetween as filesbetween";
+
 
 				//get the journal lines related to this source file
 				var lbf 		= this.linesByFile( _idx = arguments._file, lineStart = arguments._jLineStart, lineEnd = arguments._jLineEnd );
@@ -797,7 +817,7 @@
 								}
 
 								//check for coverage of this line
-								var journalLine 	= queryOfQueryRun( "SELECT " & this.dbColumnAliases & " FROM lbf WHERE line=#i# ORDER BY journalid" );
+								var journalLine 	= queryOfQueryRun( "SELECT " & dbColumnAliases & " FROM lbf WHERE line=#i# ORDER BY journalid" );
 								var filesMarker 	= "&nbsp;";
 								var filesBetween 	= "";
 								var codeClass 		= "";
@@ -883,6 +903,8 @@
   * @param {any} _jLineStart
   * @param {any} _jLineEnd
   */
+
+ bar
 --->
 <cffunction name="getHitLineCount" access="public" returntype="Any">
 	<cfargument name="_journal" required="true">

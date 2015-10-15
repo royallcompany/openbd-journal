@@ -17,7 +17,6 @@
 
   @author Marcus Fernstrom
 --->
-
 <cfcomponent output="false" hint="I'm the donut factory. Toss me data and I'll throw back donuts.">
 	<!---
 			_data takes a struct with the following format:
@@ -45,14 +44,14 @@
 	  * @param {any} _data (required)  Takes a struct of values, see example file.
 	  * @param {any} _settings Optional with some defaults, see example file
 	  * @returnformat {plain}
-	  * @return 
+	  * @return
 	  */
 	--->
 <cffunction name="donut" access="remote" hint="Main entry point for the donut factory" returnformat="plain">
 		<cfargument name="_data" required="true" hint="Takes a struct of values, see example file.">
 		<cfargument name="_settings" default='{}' hint="Optional with some defaults, see example file">
 		<cfscript>
-			// In case we're using the default for settings 
+			// In case we're using the default for settings
 			if( !isStruct(arguments._data) )			{ arguments._data 		= deserializeJSON(arguments._data); }
 			if( !isStruct(arguments._settings) )	{ arguments._settings	= deserializeJSON(arguments._settings); }
 
@@ -63,8 +62,7 @@
 			if( !structKeyExists(arguments._settings, 'left') ) 			{ arguments._settings.left 			= true; }
 
 			// Helper contains the color generator
-			var helper = createObject('component','helpers');
-			var colors = helper.getColors( structCount(arguments._data) );
+			var colors = this.getColors( structCount(arguments._data) );
 
 			// Setting a random ID, starting with A because if it starts with a number, it breaks.
 			var id = 'A' & Replace(createUUID(), '-', '', 'ALL');
@@ -116,7 +114,7 @@
 															useColor,
 															item,
 															arguments._data[item].value ]);
-				
+
 				last 		+= arguments._data[item].value;
 				total 	+= arguments._data[item].value;
 				counter++;
@@ -186,4 +184,41 @@
 		</cfsavecontent>
 		<cfreturn toReturn>
 	</cffunction>
+
+
+
+	<cffunction name="getColors" access="public">
+		<cfargument name="_cnt" required="true" type="numeric">
+
+		<cfset var ret = []>
+		<cfset var clrs = ["##023FA5",
+						"##7D87B9",
+						"##BEC1D4",
+						"##D6BCC0",
+						"##4A6FE3",
+						"##8595E1",
+						"##B5BBE3",
+						"##E6AFB9",
+						"##E07B91",
+						"##D33F6A",
+						"##11C638",
+						"##8DD593",
+						"##C6DEC7",
+						"##EAD3C6",
+						"##F0B98D",
+						"##EF9708",
+						"##0FCFC0",
+						"##9CDED6",
+						"##D5EAE7",
+						"##F3E1EB",
+						"##F6C4E1",
+						"##F79CD4"]>
+
+		<cfloop from="1" to="#arguments._cnt#" index="i">
+			<cfset arrayAppend(ret, clrs[i])>
+		</cfloop>
+
+		<cfreturn ret>
+	</cffunction>
+
 </cfcomponent>

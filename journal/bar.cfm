@@ -19,15 +19,12 @@
 
 	<cftry>
 		<cfset parser = new journal.parser( GetJournalDirectory() & url.journal )>
-		<cfset helper = new journal.helpers()>
-
-		<cfset _file_path_to_webroot 	= expandPath("/")>
 		<cfset fileList 							= [""]>
 		<cfset valList 								= []>
 
 		<cfloop from="1" to="#ArrayLen(parser.files)#" index="i">
 			<cfset temp 				= parser.getHitLineCount( _journal = GetJournalDirectory() & url.journal, _fileId = i )>
-			<cfset shorterName 	= helper.getWebRootRelativeJournalFilePath( parser.files[i].name, _file_path_to_webroot )>
+			<cfset shorterName 	= parser.getWebRootRelativeJournalFilePath( parser.files[i].name, expandPath("/") )>
 			<cfset ts 					= { cat: shorterName, value: temp, href: "fileCoverage.cfm?JOURNAL=#url.journal#&FILE=#i#&MODE=nSource" }>
 			<cfset arrayAppend(valList, ts)>
 		</cfloop>
@@ -41,7 +38,7 @@
 	</cfcatch>
 	</cftry>
 
-	
+
 </cfsilent>
 
 
@@ -61,7 +58,7 @@
 	</script>
 
 <cfelse>
-	
+
 	<p>An error was encountered while reading this journal file. Please return to the <a href="index.cfm">Journaling Home Page</a> and select another journal.</p>
 
 </cfif>

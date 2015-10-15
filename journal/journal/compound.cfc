@@ -22,7 +22,7 @@
 	<!---
 	/**
 		* Entry point for the compound component
-		* 
+		*
 	  * @public
 	  * @method compoundJournals
 	  * @param {string} _files (required)  Takes a list of names, relative to the journal log root
@@ -35,9 +35,6 @@
 		<cfargument name="_filename" 	type="string" default="" 			hint="If you pass in a filename, that will be used when saving the compound journal file">
 		<cfscript>
 			try {
-				// Setting up new object to browser component
-				this.brs = new browser();
-				
 				// Making an array of the files list, and sorting
 				// so we're compounding in the right order.
 				var theList = listToArray(arguments._files);
@@ -68,14 +65,14 @@
 
 				// Creating a file list from all the journal files
 				for ( item in theList ) {
-					jrnl = this.brs.getJournal( GetJournalDirectory() & '/' & item );
+					jrnl = new parser( GetJournalDirectory() & '/' & item );
 					for ( i = 1; i <= ArrayLen(jrnl.files); i++ ) {
 						if ( !arrayContains(journalFiles, jrnl.files[i]) ) {
 							arrayAppend(journalFiles, jrnl.files[i]);
 						}
 					}
 				}
-				
+
 				// Looping each journal file
 				for ( f in theList ) {
 					theFile = fileRead( GetJournalDirectory() & '/' & f );
@@ -124,7 +121,7 @@
 
 				// Writing the result to file
 				FileWrite( GetJournalDirectory() & '/' & arguments._filename, fixedNewComp & blockToAppend) ;
-				
+
 				return { "_success":true, "_message":"" };
 			} catch ( any e ) {
 				writeDump(e);
@@ -135,7 +132,7 @@
 		</cfscript>
 	</cffunction>
 
-	
+
 
 	<!---
 	/**
@@ -143,8 +140,8 @@
 	  *
 	  * @private
 	  * @method arrToStr
-	  * @param {array} arr (required) 
-	  * @return 
+	  * @param {array} arr (required)
+	  * @return
 	  */
 	--->
 <cffunction name="arrToStr" access="private" hint="Turns an array into a struct with the index as the value">
@@ -165,11 +162,11 @@
 		*
 	  * @private
 	  * @method fixBlock
-	  * @param {array} _files (required) 
-	  * @param {string} _block (required) 
-	  * @param {string} _filename (required) 
-	  * @param {numeric} _timeOffset (required) 
-	  * @return 
+	  * @param {array} _files (required)
+	  * @param {string} _block (required)
+	  * @param {string} _filename (required)
+	  * @param {numeric} _timeOffset (required)
+	  * @return
 	  */
 	--->
 <cffunction name="fixBlock" access="private" hint="Takes the non-json block and fixes timestamps and file references">
@@ -178,7 +175,7 @@
 		<cfargument name="_filename" 		type="string" 	required="true">
 		<cfargument name="_timeOffset" 	type="numeric" 	required="true">
 		<cfscript>
-			var jrnl = this.brs.getJournal( GetJournalDirectory() & '/' & arguments._filename );
+			var jrnl = new parser( GetJournalDirectory() & '/' & arguments._filename );
 			var fileList = {};
 
 			// File list
@@ -196,7 +193,7 @@
 						toFix[i] = ListSetat( toFix[i], 3, arrayFind(arguments._files, jrnl.files[listGetAt(toFix[i], 3)]) );
 					}
 					toFix[i] = ListSetat( toFix[i], 1, ListFirst( toFix[i] ) + arguments._timeOffset );
-				}			
+				}
 			}
 			// And return a list rather than array
 			return ArrayToList(toFix, chr(10));
@@ -211,7 +208,7 @@
 	  *
 	  * @public
 	  * @method getStructFromJournal
-	  * @param {string} _journal (required) 
+	  * @param {string} _journal (required)
 	  */
 	--->
 <cffunction name="getStructFromJournal" access="public" hint="Returns the json block as a struct for the specified file">
