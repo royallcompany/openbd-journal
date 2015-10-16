@@ -45,13 +45,32 @@
 
 
 
-	remote struct function getJournalData(page, perPage, offset, sorts) returnformat="JSON" {
+	remote struct function getJournalData(string page = 1, numeric perPage = 10, numeric offset = 0, string sorts = "") returnformat="JSON" {
 		var qry = "SELECT * FROM journalMetadata";
-		console(arguments); // RESUME how to handle sorting: sorts[TIME]
+		var orderBy = deserializeJSON(sorts);
+
+		// Build up the query and get the data
+		if ( isStruct(orderBy) && !structIsEmpty(orderBy) ) {
+			console(orderBy);
+			// sorting operation
+			qry &= " ORDER BY ";
+
+			for ( var sort in orderBy ) {
+				qry &= sort & " ";
+				if ( orderBy[sort] == -1 ) {
+					qry &= "DESC, ";
+				} else {
+					qry &= "ASC, ";
+				}
+			}
+			// remove last comma
+			qry = left(qry, len(qry) - 2);
+			console(qry);
+		}
 
 		var jData = queryRun(this.DATA_SOURCE, qry);
 
-		// Dynatree expected format
+		// Create struct with Dynatree format
 		var journals = {
 			records: [],
 			queryRecordCount: jData.recordCount,

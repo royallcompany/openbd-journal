@@ -17,9 +17,9 @@
 --->
 <cfset title 	= 'Journal Files'>
 
-<cfinclude template="header.cfm">
+<cfinclude template="includes/header.cfm">
 
-	<cfinclude template="settings.cfm">
+	<cfinclude template="includes/settings.cfm">
 
 	<cfif (!structKeyExists(URL,"j"))>
 
@@ -31,9 +31,9 @@
 		<table id="allJournals" border="0" cellspacing="0" class="pure-table pure-table-bordered pure-table-striped text-top">
 			<thead>
 				<tr>
-					<th data-dynatable-no-sort="true"><input type="checkbox" id="checkAll" title="Select all"></th>
+					<th data-dynatable-column="SELECTCB" data-dynatable-no-sort="true"><input type="checkbox" id="checkAll" title="Select all"></th>
 					<th data-dynatable-column="NAME">Journal</th>
-					<th data-dynatable-no-sort="true"><label><input type="checkbox" id="files-control"> Show All Coverage Files</label></th>
+					<th data-dynatable-column="COVERAGE" data-dynatable-no-sort="true"><label><input type="checkbox" id="files-control"> Show All Coverage Files</label></th>
 					<th data-dynatable-column="STARTINGURI">Starting URI</th>
 					<th data-dynatable-column="CREATED">Created</th>
 					<th data-dynatable-column="OUTPUT">Output</th>
@@ -41,7 +41,11 @@
 					<th data-dynatable-column="TIME">Time</th>
 				</tr>
 			</thead>
-			<tbody>
+			<tbody></tbody>
+		</table>
+	</form>
+
+	<script id="end-row-template" type="text/template">
 				<tr>
 					<td colspan="9">
 						<div style="display:inline-block; vertical-align: middle; margin-right: 1em">
@@ -51,11 +55,21 @@
 						<input type="submit" value="Do it" class="pure-button pure-button-primary">
 					</td>
 				</tr>
-			</tbody>
-		</table>
-	</form>
+	</script>
+
+	<script id="coverage-template" type="text/template">
+				<a href="coverage.cfm?journal={{NAME}}" class="pure-button button-warning coverage-btn" style="margin-bottom:0.5em">coverage</a>
+  			<br><a href="javascript:void(0);" class="directory-filtering-link">Filter by directory</a>
+  			<div class="hidden directory-filtering">
+	  			<fieldset>
+		  			<legend>Filter as:</legend>
+		  			<label class="pure-radio"><input type="radio" name="typeSwitch{{SHORTNAME}}" value="include" checked> include</label>
+		  			<label class="pure-radio"><input type="radio" name="typeSwitch{{SHORTNAME}}" value="exclude"> exclude</label>
+	  			</fieldset>
+  			</div>
+	</script>
 
 	</cfif>
 
-	<script src="assets/js/journal/journalTable.js"></script> d
-<cfinclude template="footer.cfm">
+	<script src="assets/js/journal/journalTable.js"></script>
+<cfinclude template="includes/footer.cfm">
