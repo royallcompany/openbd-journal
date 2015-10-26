@@ -42,7 +42,7 @@
 </cfsilent>
 
 
-<cfinclude template="header.cfm">
+<cfinclude template="includes/header.cfm">
 
 <cfif IsDefined( "valList" )>
 	<p>
@@ -63,4 +63,4 @@
 
 </cfif>
 
-<cfinclude template="footer.cfm">
+<cfinclude template="includes/footer.cfm">

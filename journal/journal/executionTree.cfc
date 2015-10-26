@@ -1,17 +1,17 @@
 /**
 	* OpenBD Journaling Tool
   * Copyright (C) 2015
-  * 
+  *
   * This program is free software: you can redistribute it and/or modify
   * it under the terms of the GNU General Public License as published by
   * the Free Software Foundation, either version 3 of the License, or
   * (at your option) any later version.
-  * 
+  *
   * This program is distributed in the hope that it will be useful,
   * but WITHOUT ANY WARRANTY; without even the implied warranty of
   * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   * GNU General Public License for more details.
-  * 
+  *
   * You should have received a copy of the GNU General Public License
   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	*/
@@ -24,10 +24,10 @@ component {
 
 	/**
 		* Initialize with path to a journal
-		* 
+		*
 		* @method init
 		* @public
-		* @param {string} _sPath (required)   
+		* @param {string} _sPath (required)
 		*/
 	public component function init(required string _sPath){
 		this.sPath = arguments._sPath;
@@ -44,7 +44,7 @@ component {
 		* @param {numeric} [fileId = 1]
 		* @param {numeric} [startLine = 0]
 		* @param {numeric} [endLine = 0]
-		* @param {numeric} [depth = 1]  
+		* @param {numeric} [depth = 1]
 		* @return {array}
 		*/
 	public array function buildTree(numeric fileId=1, numeric startLine=0, numeric endLine=0, numeric depth=1){
@@ -85,7 +85,7 @@ component {
 
 	/**
 		* @method getDepthData
-		* @public  
+		* @public
 		* @return {array}
 		*/
 	public array function getDepthData(){
@@ -109,7 +109,7 @@ component {
 
 	/**
 		* @method getIdData
-		* @public  
+		* @public
 		* @return {array}
 		*/
 	public array function getIdData(){
@@ -131,7 +131,7 @@ component {
 
 	/**
 		* @method getTimeData
-		* @public  
+		* @public
 		* @return {array}
 		*/
 	public array function getTimeData(){
@@ -155,7 +155,7 @@ component {
 	/**
 		* @method getAccent
 		* @private
-		* @param {struct} entry (required)   
+		* @param {struct} entry (required)
 		* @return {numeric}
 		*/
 	private numeric function getAccent(required struct entry){

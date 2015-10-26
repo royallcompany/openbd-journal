@@ -57,12 +57,12 @@
 		// Read journal into the database, if it's not already present
 		try {
 			if( queryRun("journaling", "SELECT distinct(id) FROM journal WHERE id=#this.journalShort#").recordCount == 0 ) {
-				JournalReadToDataSource( datasource="journaling", file=this.sPath, id=this.journalShort, table="journal" );
+				JournalReadToDataSource( datasource="journaling", file=this.sPath, id=this.journalShort );
 			}
 
 		} catch( any e ) {
 			if( e.detail contains 'Table "JOURNAL" not found' ) {
-				JournalReadToDataSource( datasource="journaling", file=this.sPath, id=this.journalShort, table="journal" );
+				JournalReadToDataSource( datasource="journaling", file=this.sPath, id=this.journalShort );
 			}
 		}
 
@@ -197,12 +197,12 @@
 	  * Given a file_id, return the relative filename to the webroot
 	  *
 	  * @method getPrettyFile
-	  * @remote
+	  * @public
 	  * @param {numeric} _idx (required)
 	  * @param {string} [_journal = '']
 	  * @return {string}
 	  */
-	remote string function getPrettyFile( required numeric _idx, string _journal='' ) returnformat='plain'{
+	public string function getPrettyFile( required numeric _idx, string _journal='' ) returnformat='plain'{
 		if( len(arguments._journal) > 0 ) {
 			this.init( _sPath = getJournalDirectory() & arguments._journal );
 		}
@@ -269,7 +269,12 @@
 
 
 
-	public struct function getAllFilesInDirectories( _delimiter = "/" ) {
+	/**
+	  * @method getAllFilesInDirectories
+	  * @public
+	  * @return {struct}
+	  */
+	public struct function getAllFilesInDirectories() {
 		var directories = this.directories;
 
 		// Build up the struct once
@@ -281,26 +286,25 @@
 			// Build up the directory structure by file name
 			for ( i = 1; i <= arrayLen(files); i++ ) {
 				// prettify file path
-				dir = replace(files[i].name, expandPath("/").replace(FileSeparator(), arguments._delimiter), "");
+				dir = replace(files[i].name, expandPath("/").replace(FileSeparator(), "/"), "");
 				// remove filename
-				dir = listDeleteAt(dir, listLen(dir, arguments._delimiter), arguments._delimiter);
+				dir = listDeleteAt(dir, listLen(dir, "/"), "/");
 				// clean up the path to match a struct (dashes -> underscore then numbers -> string)
-				dir = rereplace(replace(ListChangeDelims(dir, '.', arguments._delimiter), '-', '_DASH_HERE_'), "([0-9])", "NUM_BER_\1", "all");
+				dir = rereplace(replace(ListChangeDelims(dir, '.', "/"), '-', '_DASH_HERE_'), "([0-9])", "NUM_BER_\1", "all");
 
 				// Add the file ids to the end of directory struct
 				if ( !isDefined("directories.#dir#") ) {
 					// Create the key for array of ids
-					ids = { journalingfileids: [ files[i].id ] };
+					ids = { journalingfilesdata: [] };
 				} else {
 					ids = getVariable("directories.#dir#");
 
 					// ensure we have the key
-					if ( !structKeyExists(ids, "journalingfileids") ) {
-						ids.journalingfileids = [];
+					if ( !structKeyExists(ids, "journalingfilesdata") ) {
+						ids.journalingfilesdata = [];
 					}
-
-					arrayAppend(ids.journalingfileids, files[i].id);
 				}
+				arrayAppend(ids.journalingfilesdata, { id: files[i].id, name: this.getPrettyFile(files[i].id) });
 
 				try {
 					setVariable("directories.#dir#", ids);
@@ -315,6 +319,13 @@
 
 
 
+	/**
+	  * @method getBrowsingTreeMarkup
+	  * @public
+	  * @param {structure|array} _data (required)
+	  * @param {string} [_valuePrefix = "" ]
+	  * @return {string}
+	  */
 	public string function getBrowsingTreeMarkup( required _data, string _valuePrefix = "" ) {
 		var jsoup = Html("");
 
@@ -760,6 +771,18 @@
 
 code trace
 		--->
+<!---
+		/**
+		  * @remote
+		  * @method renderSourceCoverage
+		  * @param {any} _file (required)
+		  * @param {any} _journal (required)
+		  * @param {any} _jLineStart
+		  * @param {any} _jLineEnd
+		  * @returnformat {plain}
+		  * @return {string}
+		  */
+		--->
 <cffunction name="renderSourceCoverage" access="remote" returntype="string" returnformat="plain">
 			<cfargument name="_file" required="true">
 			<cfargument name="_journal" required="true">
@@ -905,6 +928,16 @@ code trace
   */
 
  bar
+--->
+<!---
+/**
+  * @public
+  * @method getHitLineCount
+  * @param {any} _journal (required)
+  * @param {any} _fileId (required)
+  * @param {any} _jLineStart
+  * @param {any} _jLineEnd
+  */
 --->
 <cffunction name="getHitLineCount" access="public" returntype="Any">
 	<cfargument name="_journal" required="true">

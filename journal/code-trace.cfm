@@ -46,7 +46,7 @@
 	}
 </cfscript></cfsilent>
 
-<cfinclude template="header.cfm">
+<cfinclude template="includes/header.cfm">
 
 	<cfif !IsStruct( jrnl )>
 		<!--- file not specified --->
@@ -282,4 +282,4 @@
 	</cfif>
 
 
-<cfinclude template="footer.cfm">
+<cfinclude template="includes/footer.cfm">

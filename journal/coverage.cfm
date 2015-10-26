@@ -22,7 +22,7 @@
 	param name = "URL.mode" 		default="nSource";
 	param name = "URL.excludes" default="";
 	param name = "URL.includes" default="";
-	
+
 	if ( !structKeyExists( url, "journal" ) ) {
 		location( "index.cfm" );
 	}
@@ -30,7 +30,7 @@
 	journalPath = GetJournalDirectory() & url.journal;
 	journal 		= new journal.parser( journalPath );
 	journal.loadAll();
-		
+
 	try {
 		totalCoverage = int( journal.getTotalCoverage() * 1000 ) / 10;
 
@@ -49,30 +49,30 @@
 			nOther 		: "Other"
 		};
 
-		
+
 		for ( stat in totalStats ) {
 			if ( listFind( "nSource,nCoverage", stat ) < 1 ) {
 				statDonut[ stateFriendly[ stat ] ] = { value : totalStats[ stat ] };
 			}
 		}
-		
+
 	} catch( any err ) {
 		console( "error encountered in coverage.cfm" );
 		console( err );
 	}
 		tagStats = journal.getTagUsage();
 		tagDonut = {};
-		
+
 		for ( tag in tagStats ) {
 			tagDonut[ tag.tag ] = { value : tag.cnt };
 		}
-		
+
 		rpt = new journal.report();
 
 		donutFactory = new journal.donut();
 </cfscript></cfsilent>
 
-<cfinclude template="header.cfm">
+<cfinclude template="includes/header.cfm">
 
 	<cfif IsDefined( "rpt" )>
 
@@ -213,4 +213,4 @@
 
 	</cfif>
 
-<cfinclude template="footer.cfm">
+<cfinclude template="includes/footer.cfm">

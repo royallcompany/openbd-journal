@@ -41,46 +41,64 @@
 				queryRun( this.DATA_SOURCE, "INSERT INTO #this.TABLE_NAME# (name, shortName, startingUri, created, output, size, time) VALUES ('#fileQu.name[i]#', #short#, '#listFirst(jInfo._uri, "?")#', #fileQu.datelastmodified[i]#, #jInfo._bytes#, #fileQu.size[i]#, #jInfo._timems#)");
 			}
 		}
+
+		// record the total for later
+		this.recordCount = fileQu.recordCount;
 	}
 
 
 
-	remote struct function getJournalData(string page = 1, numeric perPage = 10, numeric offset = 0, string sorts = "") returnformat="JSON" {
+	remote struct function getJournalsData(string page = 1, numeric perPage = 10, numeric offset = 0, string sorts = "") returnformat="JSON" {
+		this.init();
+
 		var qry = "SELECT * FROM journalMetadata";
-		var orderBy = deserializeJSON(sorts);
 
 		// Build up the query and get the data
-		if ( isStruct(orderBy) && !structIsEmpty(orderBy) ) {
-			console(orderBy);
+		if ( sorts != "" ) {
 			// sorting operation
-			qry &= " ORDER BY ";
-
-			for ( var sort in orderBy ) {
-				qry &= sort & " ";
-				if ( orderBy[sort] == -1 ) {
-					qry &= "DESC, ";
-				} else {
-					qry &= "ASC, ";
-				}
-			}
-			// remove last comma
-			qry = left(qry, len(qry) - 2);
-			console(qry);
+			qry &= " ORDER BY " & replace(replace(sorts, ":-1", " DESC", "all"), ":1", " ASC", "all");
 		}
+		// paging operation
+		qry &= " LIMIT #offset#,#perPage#";
 
 		var jData = queryRun(this.DATA_SOURCE, qry);
 
 		// Create struct with Dynatree format
 		var journals = {
 			records: [],
-			queryRecordCount: jData.recordCount,
+			queryRecordCount: this.recordCount,
 			totalRecordCount: perPage
 		};
 
+		// Add queried records to struct
 		for ( var i = 1; i <= jData.recordCount; i++ ) {
-			arrayAppend(journals.records, queryRowStruct(jData, i));
+			var rowData = queryRowStruct(jData, i);
+			// Get the directories struct from parser
+			rowData.coverage = new parser(this.JOURNAL_PATH & fileSeparator() & rowData.name).getAllFilesInDirectories();
+			arrayAppend(journals.records, rowData);
 		}
 
 		return journals;
+	}
+
+
+
+	/**
+		* Remote (AJAX) function for getting the latest journal files timestamp
+		*
+		* @method latestJournalTimestamp
+		* @remote
+		* @return {any}
+		*/
+	remote function latestJournalTimestamp() returnformat='plain' {
+		var everything = directoryList( ArgumentCollection= {	path:GetJournalDirectory(),
+																													recurse:true,
+																													sort:'datelastmodified desc',
+																													filter:'*.txt'} );
+		if( arrayLen(everything) > 0 ) {
+			return ListLast(everything[1], fileSeparator());
+		} else {
+			return 'none';
+		}
 	}
 </cfscript></cfcomponent>

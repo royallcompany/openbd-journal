@@ -25,15 +25,13 @@
 
 	<p id="messageP"></p>
 
-	<cfset handler = new journal.handler()>
-
 	<form action="" method="post" class="pure-form">
 		<table id="allJournals" border="0" cellspacing="0" class="pure-table pure-table-bordered pure-table-striped text-top">
 			<thead>
 				<tr>
 					<th data-dynatable-column="SELECTCB" data-dynatable-no-sort="true"><input type="checkbox" id="checkAll" title="Select all"></th>
 					<th data-dynatable-column="NAME">Journal</th>
-					<th data-dynatable-column="COVERAGE" data-dynatable-no-sort="true"><label><input type="checkbox" id="files-control"> Show All Coverage Files</label></th>
+					<th data-dynatable-column="coverage" data-dynatable-no-sort="true"><label><input type="checkbox" id="files-control"> Show All Coverage Files</label></th>
 					<th data-dynatable-column="STARTINGURI">Starting URI</th>
 					<th data-dynatable-column="CREATED">Created</th>
 					<th data-dynatable-column="OUTPUT">Output</th>
@@ -69,7 +67,24 @@
   			</div>
 	</script>
 
+	<script id="directories-template" type="text/template">
+					<li class="directory-item">
+						<span class="directory-toggle">-</span>
+						<label class="pure-checkbox">
+							<input type="checkbox" value="{{prefix}}{{dir}}">
+							<span class="directory-label">{{dir}}</span>
+						</label>
+					</li>
+	</script>
+
+	<script id="files-template" type="text/template">
+				<ul class="file-list">
+					<li class="file-item"><a href="fileCoverage.cfm?journal={{SHORTNAME}}&file={{id}}">{{name}}</a></li>
+				</ul>
+	</script>
+
 	</cfif>
 
-	<script src="assets/js/journal/journalTable.js"></script>
+	<script src="assets/js/journal/journalTable.js"></script> <!--- contains necessary javascript for this page --->
+
 <cfinclude template="includes/footer.cfm">

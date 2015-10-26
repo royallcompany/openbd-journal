@@ -8,7 +8,7 @@
  *
  * Date: Tue Jan 02 2014
  *
- * CHANGED BY @CaitlinWeb line 207
+ * CHANGED BY @CaitlinWeb line 257
  */
 //
 
@@ -206,9 +206,9 @@
     // TODO: Wrap this in a try/rescue block to hide the processing indicator and indicate something went wrong if error
     this.processingIndicator.show();
 
-// CHANGE *****************************************************************************************************************
-    if (this.settings.features.sort && !$.isEmptyObject(this.settings.dataset.sorts)) { data[this.settings.params.sorts] = JSON.stringify(this.settings.dataset.sorts); }
-// ***************************************************************************************************************** END
+    // CHANGE *****************************************************************************************************************
+    if (this.settings.features.sort && !$.isEmptyObject(this.settings.dataset.sorts)) { data[this.settings.params.sorts] = JSON.stringify(this.settings.dataset.sorts).replace(/[\{\}"]/g, ''); }
+    // ***************************************************************************************************************** END
     if (this.settings.features.paginate && this.settings.dataset.page) {
       var page = this.settings.dataset.page,
           perPage = this.settings.dataset.perPage;
@@ -236,6 +236,7 @@
           _this.dom.update();
 
           if (!skipPushState && _this.state.initOnLoad()) {
+            data[_this.settings.params.sorts] = _this.settings.dataset.sorts;
             _this.state.push(data);
           }
         },

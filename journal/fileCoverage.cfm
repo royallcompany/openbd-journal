@@ -35,7 +35,7 @@
 	}
 </cfscript></cfsilent>
 
-<cfinclude template="header.cfm">
+<cfinclude template="includes/header.cfm">
 
 	<cfif IsDefined( "parser" )>
 
@@ -149,9 +149,9 @@
 		</script>
 
 	<cfelse>
-	
+
 		<p>An error was encountered while reading this journal file. Please return to the <a href="index.cfm">Journaling Home Page</a> and select another journal.</p>
 
 	</cfif>
 
-<cfinclude template="footer.cfm">
+<cfinclude template="includes/footer.cfm">

@@ -16,24 +16,6 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --->
 
-<cfsilent>
-<cfscript>
-if( StructKeyExists( form, "journalauth" ) && form.journalauth == "openbdjournal" ) {
-	SetCookie( name="openbdjournalauth", value="ok", httponly=true );
-	location( "index.cfm" );
-
-} else {
-	SetCookie( name="openbdjournalauth", expires="NOW" );
-}
-</cfscript>
-</cfsilent>
-
-<cfinclude template="includes/header.cfm" />
-
-	<h2>You must login to continue</h2>
-	<form method="POST" action="" class="pure-form">
-		<label for="journalauth">OpenBD Journal Password: &nbsp;<input type="password" id="journalauth" name="journalauth" /></label>
-		<button class="pure-button pure-button-primary" type="submit">Login</button>
-	</form>
-
-<cfinclude template="includes/footer.cfm" />
+	</div>
+</body>
+</html>
