@@ -17,14 +17,18 @@
   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	*/
 
-	this.JOURNAL_PATH = GetJournaldirectory();
+	this.JOURNAL_PATH = GetJournaldirectory() & fileSeparator();
 	this.DATA_SOURCE = "journaling";
 	this.TABLE_NAME = "journalMetadata";
 
 
+	/**
+	  * @method init
+	  * @public
+	  */
 	public component function init() {
 		// Create the journal metadata table if it doesn't exist
-		queryRun( this.DATA_SOURCE, "CREATE TABLE IF NOT EXISTS #this.TABLE_NAME# ( id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR, shortName INT, startingUri VARCHAR, created DATETIME, output INT, size INT, time INT );" );
+		queryRun( this.DATA_SOURCE, "DROP TABLE #this.TABLE_NAME#;CREATE TABLE IF NOT EXISTS #this.TABLE_NAME# ( id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR, shortName INT, startingUri VARCHAR, created DATETIME, output INT, size INT, time INT );" );
 
 		// Get the journal files
 		var fileQu = DirectoryList(this.JOURNAL_PATH, true, "query", "*.txt", "datelastmodified desc");
@@ -36,7 +40,8 @@
 			short = Right(reReplace(fileQu.name[i], "[^0-9]", "", "ALL"), 8);
 
 			if ( queryRun(this.DATA_SOURCE, "SELECT shortName FROM #this.TABLE_NAME# WHERE shortName LIKE #short#").recordCount == 0 ) {
-				jInfo = journalRead(this.JOURNAL_PATH & fileSeparator() & fileQu.name[i]);
+				console('yeah we did the thing'); // TODO
+				jInfo = journalRead(this.JOURNAL_PATH & fileQu.name[i]);
 
 				queryRun( this.DATA_SOURCE, "INSERT INTO #this.TABLE_NAME# (name, shortName, startingUri, created, output, size, time) VALUES ('#fileQu.name[i]#', #short#, '#listFirst(jInfo._uri, "?")#', #fileQu.datelastmodified[i]#, #jInfo._bytes#, #fileQu.size[i]#, #jInfo._timems#)");
 			}
@@ -48,6 +53,18 @@
 
 
 
+	/**
+		* Used by Dynatable, this returns the journal data based on the request.
+		*
+	  * @method getJournalsData
+	  * @remote
+	  * @param {string} [page = 1]
+	  * @param {numeric} [perPage = 10]
+	  * @param {numeric} [offset = 0]
+	  * @param {string} [sorts = ""]
+	  * @returnformat {JSON}
+	  * @return {struct}
+	  */
 	remote struct function getJournalsData(string page = 1, numeric perPage = 10, numeric offset = 0, string sorts = "") returnformat="JSON" {
 		this.init();
 
@@ -74,11 +91,58 @@
 		for ( var i = 1; i <= jData.recordCount; i++ ) {
 			var rowData = queryRowStruct(jData, i);
 			// Get the directories struct from parser
-			rowData.coverage = new parser(this.JOURNAL_PATH & fileSeparator() & rowData.name).getAllFilesInDirectories();
+			rowData.coverage = new parser(this.JOURNAL_PATH & rowData.name).getAllFilesInDirectories();
 			arrayAppend(journals.records, rowData);
 		}
 
 		return journals;
+	}
+
+
+
+	/**
+		* Deletes journal file(s)
+		*
+		* @method purgeJournalData
+		* @public
+		* @param {string|list} _paths full path(s) to the journal file
+		* @return {boolean}
+		*/
+	public boolean function purgeJournalsData( string _paths ) {
+		var file;
+		var ret = true;
+		var whereClause = '';
+
+		// Remove the files
+		for ( var i = 1; i <= listLen(arguments._paths); i++ ) {
+			fileName = listGetAt(arguments._paths, i);
+			file = this.JOURNAL_PATH & fileName & '.session';
+			whereClause &= ' OR name LIKE ''#fileName#''';
+
+			try {
+				if ( fileExists(file) ) {
+					fileDelete(file);
+				}
+
+				ret = ret && fileDelete(this.JOURNAL_PATH & fileName);
+			} catch( any e ){
+				ret = false;
+				console(serializeJSON(e));
+			}
+		}
+		// remove first extra or
+		whereClause = replace(whereClause, ' OR ', '');
+		console(whereClause);
+
+		if (ret) {
+			// Remove data from the query
+			queryRun(this.DATA_SOURCE, 'DELETE FROM #this.TABLE_NAME# WHERE #whereClause# ESCAPE ''~''');
+		} else {
+			// Force refresh
+			queryRun(this.DATA_SOURCE, 'DROP TABLE #this.TABLE_NAME#');
+		}
+
+		return ret;
 	}
 
 

@@ -17,13 +17,52 @@
 --->
 <cfset title 	= 'Journal Files'>
 
+<!--- File option, deleting and compounding files --->
+<cfif structKeyExists(form, "fileOption") AND structKeyExists(form, "fl")>
+	<!--- Check the option chosen --->
+	<cfif form.fileOption == "delete">
+		<!--- Make sure the list is not empty --->
+		<cfif Len(form.fl) GT 0>
+			<cfset result = createObject("journal/handler").purgeJournalsData(form.fl)>
+
+				<cfsavecontent variable="message"><cfoutput>
+					<cfif result == true>
+						<span style="color:green;">#ListLen(form.fl)# file<cfif ListLen(form.fl) GT 1>s</cfif> deleted.</span><br>
+					<cfelse>
+						<span style="color:red;">Failed to delete.</span><br>
+					</cfif>
+				</cfoutput></cfsavecontent>
+		</cfif>
+
+	<cfelseif form.fileOption == "compound">
+		<!--- Make sure the list contains at least two files --->
+		<cfif listLen(form.fl) GT 1>
+			<cfset cmp 				= CreateObject("component", "journal.compound")>
+			<cfset list 			= listToArray( listSort(form.fl, "text") )>
+			<cfset compStatus = cmp.compoundJournals( _files = form.fl )>
+			<cfif compStatus._success>
+				<cfsavecontent variable="message"><span style="color:green;">Files compounded!</span></cfsavecontent>
+			<cfelse>
+				<cfsavecontent variable="message"><span style="color:red;">Compound failed!</span></cfsavecontent>
+			</cfif>
+		<cfelse>
+			<cfsavecontent variable="message"><span style="color:red;">To create a compound file, you need to select a start and end file.</span></cfsavecontent>
+		</cfif>
+	<cfelse>
+
+		<cfsavecontent variable="message">I've no idea how you managed to get to the else switch, go you!</cfsavecontent>
+	</cfif>
+</cfif>
+
 <cfinclude template="includes/header.cfm">
 
 	<cfinclude template="includes/settings.cfm">
 
 	<cfif (!structKeyExists(URL,"j"))>
 
-	<p id="messageP"></p>
+	<p id="messageP"><cfif isDefined('message')>
+		<cfoutput>#message#</cfoutput>
+	</cfif></p>
 
 	<form action="" method="post" class="pure-form">
 		<table id="allJournals" border="0" cellspacing="0" class="pure-table pure-table-bordered pure-table-striped text-top">
@@ -55,9 +94,13 @@
 				</tr>
 	</script>
 
+	<script id="empty-template" type="text/template">
+				<tr><td colspan="9">There are no journal files. Use the form above to create journals.</td></tr>
+	</script>
+
 	<script id="coverage-template" type="text/template">
 				<a href="coverage.cfm?journal={{NAME}}" class="pure-button button-warning coverage-btn" style="margin-bottom:0.5em">coverage</a>
-  			<br><a href="javascript:void(0);" class="directory-filtering-link">Filter by directory</a>
+  			<br><a href="javascript:void(0);" class="directory-filtering-link dropdown-open">Filter by directory</a>
   			<div class="hidden directory-filtering">
 	  			<fieldset>
 		  			<legend>Filter as:</legend>

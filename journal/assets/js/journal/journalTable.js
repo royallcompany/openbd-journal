@@ -5,7 +5,7 @@ $( document ).ready( function() {
 			ajax: true,
 			ajaxUrl: 'journal/handler.cfc?METHOD=getJournalsData',
 			ajaxOnLoad: true,
-			// ajaxMethod: 'POST',
+			// ajaxMethod: 'POST', TODO
 			records: []
 		},
 		features: {
@@ -22,8 +22,13 @@ $( document ).ready( function() {
 			case 'SELECTCB':
 				return '<input type="checkbox" class="journal-select" name="fl" value="' + record.NAME + '">';
 			case 'coverage':
-				var markup = $( '#coverage-template' ).html() + getCoverageMarkup( record.coverage );
-				// RESUME get -master class on directory
+				// Get the code based on data and from template, add -master class to directory ul
+				var dir = getCoverageMarkup( record.coverage ).replace( /directory-list/, 'directory-list directory-list-master' ),
+					markup = $( '#coverage-template' ).html(),
+					ind = markup.indexOf( '</div>' );
+
+				// Insert directory markup into the template
+				markup = markup.substring( 0, ind ) + dir + markup.substring( ind );
 
 				return markup.replace( /\{\{([A-z]+)\}\}/g, function() {
 					// Replace "dropins" with the record result
@@ -43,16 +48,15 @@ $( document ).ready( function() {
 	}
 
 
-
 	function getNiceSizeFormat( bytes ) {
 		var ret = '';
 
 		if ( bytes >= 1073741824 ) {
-			ret = ( bytes / 1073741824 ).toFixed(1) + ' GB';
+			ret = ( bytes / 1073741824 ).toFixed( 1 ) + ' GB';
 		} else if ( bytes >= 1048576 ) {
-			ret = ( bytes / 1048576 ).toFixed(1) + ' MB';
+			ret = ( bytes / 1048576 ).toFixed( 1 ) + ' MB';
 		} else if ( bytes >= 1024 ) {
-			ret = ( bytes / 1024 ).toFixed(1) + ' kB';
+			ret = ( bytes / 1024 ).toFixed( 1 ) + ' kB';
 		} else {
 			ret = '1> kB';
 		}
@@ -104,127 +108,140 @@ $( document ).ready( function() {
 	}
 
 
-	function bindEventsToTable() {
-		// Toggle selection of all journals
-		$( '#checkAll' ).on( 'click', function() {
-			$( '.journal-select' ).prop( 'checked', this.checked );
-		} );
+	function bindEventsToTable( e, rows ) {
+		if ( rows ) {
 
-
-		// Initialize browsing tree
-		$( '.directory-list-master' ).a11yTree( {
-			treeLabelId: 'files-control',
-			treeItemLabelSelector: '.directory-label',
-			toggleSelector: '.directory-toggle',
-			toggleAllButton: true,
-			toggleAllClass: 'pure-button button-info',
-			onCollapse: function( $item, e ) {
-				$item.children( '.directory-toggle' ).text( '+' );
-				$item.find( 'ul.directory-list' ).addClass( 'hidden' );
-			},
-			onExpand: function( $item, e ) {
-				$item.children( '.directory-toggle' ).html( '&ndash;' );
-				$item.children( 'ul.directory-list' ).removeClass( 'hidden' );
-			}
-		} );
-
-
-		// Directory browsing related buttons
-		$( '#files-control' ).on( 'click', function( e ) {
-			var text = 'Expand all',
-				search = '.hidden';
-
-			if ( !this.checked ) {
-				text = 'Collapse all';
-				search = ':not(' + search + ')';
-			}
-
-			$( '.at-toggle-all:contains(' + text + ')' ).trigger( 'click' );
-			$( '.directory-filtering' + search ).siblings( '.directory-filtering-link' ).trigger( 'click' );
-		} );
-
-		$( '.directory-filtering-link' ).on( 'click', function( e ) {
-			$( this ).toggleClass( 'dropdown-open dropdown-close' ).siblings( '.directory-filtering' ).toggleClass( 'hidden' );
-		} );
-
-
-		// Browsing tree checkbox functionality
-		$( '.directory-list-master input[type="checkbox"]' ).on( 'click', function() {
-			var $parent,
-				$cb = $( this ),
-				isChecked = $cb.prop( 'checked' ),
-				$parents = $cb.parentsUntil( '.directory-list-master', 'li' );
-
-			// Set all children
-			$parents.eq( 0 ).find( 'ul input[type="checkbox"]' ).prop( {
-				checked: isChecked,
-				indeterminate: false
+			// Toggle selection of all journals
+			$( '#checkAll' ).on( 'click', function() {
+				$( '.journal-select' ).prop( 'checked', this.checked );
 			} );
 
-			// Set all parents
-			for ( var i = 0; i < $parents.length; i++ ) {
-				$parent = $parents.eq( i );
-				$parent.find( ' > label > input[type="checkbox"]' ).prop( {
-					checked: isChecked,
-					indeterminate: getDetermination( $parent )
-				} );
-			}
-		} );
 
-		function getDetermination( $parent ) {
-			var $inputs = $parent.find( 'ul input[type="checkbox"]' );
-
-			if ( $inputs.is( ':not(:checked)' ) && $inputs.is( ':checked' ) ) {
-				return true;
-			} else {
-				return false;
-			}
-		}
+			// Initialize browsing tree
+			$( '.directory-list-master' ).a11yTree( {
+				treeLabelId: 'files-control',
+				treeItemLabelSelector: '.directory-label',
+				toggleSelector: '.directory-toggle',
+				toggleAllButton: true,
+				toggleAllClass: 'pure-button button-info',
+				onCollapse: function( $item, e ) {
+					$item.children( '.directory-toggle' ).text( '+' );
+					$item.find( 'ul.directory-list' ).addClass( 'hidden' );
+				},
+				onExpand: function( $item, e ) {
+					$item.children( '.directory-toggle' ).html( '&ndash;' );
+					$item.children( 'ul.directory-list' ).removeClass( 'hidden' );
+				}
+			} );
 
 
-		// Add filtering param to coverage button link
-		$( '.coverage-btn' ).on( 'click', function( e ) {
-			var $btn = $( this ),
-				$div = $btn.siblings( '.directory-filtering' ).has( 'input[type="checkbox"]:checked' ),
-				filter = [];
+			// Directory browsing related buttons
+			$( '#files-control' ).on( 'click', function( e ) {
+				var text = 'Expand all',
+					search = '.hidden';
 
-			// If user selected directories, build up the list
-			if ( $div.length ) {
-				var i, $cb,
-					$cbs = $div.find( 'input[type="checkbox"]:checked' );
-
-				// Go through all the checked inputs and add unique directories to filter
-				for ( i = 0; i < $cbs.length; i++ ) {
-					$cb = $cbs.eq( i );
-
-					if ( !$cb.prop( 'indeterminate' ) && notInDirectoryFilter( filter, $cb.val() ) ) {
-						filter.push( $cb.val() + '/' );
-					}
+				if ( !this.checked ) {
+					text = 'Collapse all';
+					search = ':not(' + search + ')';
 				}
 
-				// include or exclude
-				filter = '&' + $btn.siblings( '.directory-filtering' ).find( 'input:checked' ).val() + 's=' + filter;
-			}
+				$( '.at-toggle-all:contains(' + text + ')' ).trigger( 'click' );
+				$( '.directory-filtering' + search ).siblings( '.directory-filtering-link' ).trigger( 'click' );
+			} );
 
-			window.location.href = $btn.prop( 'href' ) + filter;
+			$( '.directory-filtering-link' ).on( 'click', function( e ) {
+				$( this ).toggleClass( 'dropdown-open dropdown-close' ).siblings( '.directory-filtering' ).toggleClass( 'hidden' );
+			} );
 
-			return false;
-		} );
 
-		function notInDirectoryFilter( arr, str ) {
-			var i,
-				check = '',
-				separated = str.split( '/' );
+			// Browsing tree checkbox functionality
+			$( '.directory-list-master input[type="checkbox"]' ).on( 'click', function() {
+				var $parent,
+					$cb = $( this ),
+					isChecked = $cb.prop( 'checked' ),
+					$parents = $cb.parentsUntil( '.directory-list-master', 'li' );
 
-			for ( i = 0; i < separated.length; i++ ) {
-				check = check + separated[ i ] + '/';
+				// Set all children
+				$parents.eq( 0 ).find( 'ul input[type="checkbox"]' ).prop( {
+					checked: isChecked,
+					indeterminate: false
+				} );
 
-				if ( arr.indexOf( check ) >= 0 ) {
+				// Set all parents
+				for ( var i = 0; i < $parents.length; i++ ) {
+					$parent = $parents.eq( i );
+					$parent.find( ' > label > input[type="checkbox"]' ).prop( {
+						checked: isChecked,
+						indeterminate: getDetermination( $parent )
+					} );
+				}
+			} );
+
+			function getDetermination( $parent ) {
+				var $inputs = $parent.find( 'ul input[type="checkbox"]' );
+
+				if ( $inputs.is( ':not(:checked)' ) && $inputs.is( ':checked' ) ) {
+					return true;
+				} else {
 					return false;
 				}
 			}
 
-			return true;
+
+			// Add filtering param to coverage button link
+			$( '.coverage-btn' ).on( 'click', function( e ) {
+				var $btn = $( this ),
+					$div = $btn.siblings( '.directory-filtering' ).has( 'input[type="checkbox"]:checked' ),
+					filter = [];
+
+				// If user selected directories, build up the list
+				if ( $div.length ) {
+					var i, $cb,
+						$cbs = $div.find( 'input[type="checkbox"]:checked' );
+
+					// Go through all the checked inputs and add unique directories to filter
+					for ( i = 0; i < $cbs.length; i++ ) {
+						$cb = $cbs.eq( i );
+
+						if ( !$cb.prop( 'indeterminate' ) && notInDirectoryFilter( filter, $cb.val() ) ) {
+							filter.push( $cb.val() + '/' );
+						}
+					}
+
+					// include or exclude
+					filter = '&' + $btn.siblings( '.directory-filtering' ).find( 'input:checked' ).val() + 's=' + filter;
+				}
+
+				window.location.href = $btn.prop( 'href' ) + filter;
+
+				return false;
+			} );
+
+			function notInDirectoryFilter( arr, str ) {
+				var i,
+					check = '',
+					separated = str.split( '/' );
+
+				for ( i = 0; i < separated.length; i++ ) {
+					check = check + separated[ i ] + '/';
+
+					if ( arr.indexOf( check ) >= 0 ) {
+						return false;
+					}
+				}
+
+				return true;
+			}
+
+
+			// Insert the journal management row
+			$( '#allJournals' ).append( $( '#end-row-template' ).html() );
+
+		}
+		// No journals
+		else {
+			$( '#allJournals' ).append( $( '#empty-template' ).html() );
+			$( '.dynatable-per-page,.dynatable-pagination-links,.dynatable-record-count' ).addClass( 'hidden' );
 		}
 	}
 
@@ -238,13 +255,11 @@ $( document ).ready( function() {
 			type: 'POST',
 			dataType: 'HTML',
 			success: function( i ) {
-				if ( latestJournal.length === 0 ) {
-					latestJournal = i;
+				if ( i !== latestJournal ) {
+					// TODO refresh dynatable (how?)
 				}
 
-				if ( i !== latestJournal ) {
-					$( '#messageP' ).append( '<a href="index.cfm" style="color:red;">There are new journal files, reload?</a>' );
-				}
+				latestJournal = i;
 			},
 			error: function( a, b, c ) {
 				console.log( 'Something went wrong when trying to look for new journal files' );
